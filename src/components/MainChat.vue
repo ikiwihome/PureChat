@@ -173,7 +173,7 @@
               <path d="M5 12l7-7 7 7" />
             </svg>
             <!-- 加载状态且未悬停：加载动画 -->
-            <div v-else-if="!isHoveringSubmitButton" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <div v-else-if="!isHoveringSubmitButton" class="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"></div>
             <!-- 加载状态且悬停：停止图标 -->
             <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
               fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
