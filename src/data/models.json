@@ -1,0 +1,138 @@
+{
+  "providers": [
+    {
+      "id": "anthropic",
+      "name": "Anthropic",
+      "icon": "/anthropic.svg",
+      "models": [
+        {
+          "id": "claude-sonnet-4-20250514",
+          "name": "Claude Sonnet 4",
+          "pricing": {
+            "input": 3.00,
+            "cachedInput": 0.30,
+            "output": 15.00
+          }
+        }
+      ]
+    },
+    {
+      "id": "openai",
+      "name": "OpenAI",
+      "icon": "/openai.svg",
+      "models": [
+        {
+          "id": "gpt-5",
+          "name": "GPT-5",
+          "pricing": {
+            "input": 1.25,
+            "cachedInput": 0.125,
+            "output": 10.00
+          }
+        },
+        {
+          "id": "gpt-5-mini",
+          "name": "GPT-5 Mini",
+          "pricing": {
+            "input": 0.25,
+            "cachedInput": 0.025,
+            "output": 2.00
+          }
+        },
+        {
+          "id": "gpt-4o",
+          "name": "GPT-4o",
+          "pricing": {
+            "input": 2.50,
+            "cachedInput": 1.25,
+            "output": 10.00
+          }
+        },
+        {
+          "id": "gpt-4o-mini",
+          "name": "GPT-4o Mini",
+          "pricing": {
+            "input": 0.15,
+            "cachedInput": 0.075,
+            "output": 0.60
+          }
+        }
+      ]
+    },
+    {
+      "id": "google",
+      "name": "Google",
+      "icon": "/google.svg",
+      "models": [
+        {
+          "id": "gemini-2.5-pro",
+          "name": "Gemini 2.5 Pro",
+          "pricing": {
+            "input": 1.25,
+            "cachedInput": 0.31,
+            "output": 10.00
+          }
+        },
+        {
+          "id": "gemini-2.5-flash",
+          "name": "Gemini 2.5 Flash",
+          "pricing": {
+            "input": 0.30,
+            "cachedInput": 0.075,
+            "output": 2.50
+          }
+        }
+      ]
+    },
+    {
+      "id": "deepseek",
+      "name": "DeepSeek",
+      "icon": "/deepseek.svg",
+      "models": [
+        {
+          "id": "deepseek-chat",
+          "name": "DeepSeek V3.1",
+          "pricing": {
+            "input": 0.27,
+            "cachedInput": 0.07,
+            "output": 1.10
+          }
+        }
+      ]
+    },
+    {
+      "id": "xai",
+      "name": "xAI",
+      "icon": "/xai.svg",
+      "models": [
+        {
+          "id": "grok-4-0709",
+          "name": "Grok-4",
+          "pricing": {
+            "input": 3.00,
+            "cachedInput": 0.75,
+            "output": 15.00
+          }
+        },
+        {
+          "id": "grok-3",
+          "name": "Grok-3",
+          "pricing": {
+            "input": 3.00,
+            "cachedInput": 0.75,
+            "output": 15.00
+          }
+        },
+        {
+          "id": "grok-3-mini",
+          "name": "Grok-3 Mini",
+          "pricing": {
+            "input": 0.30,
+            "cachedInput": 0.075,
+            "output": 0.50
+          }
+        }
+      ]
+    }
+  ]
+}
