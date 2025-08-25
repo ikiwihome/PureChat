@@ -1,5 +1,5 @@
 <template>
-  <div :key="forceUpdateKey" class="flex flex-col h-full lg:mx-auto lg:w-2/3">
+  <div class="flex flex-col h-full lg:mx-auto lg:w-2/3">
     <!-- 消息列表区域 -->
     <div ref="messagesContainer" class="flex-1 min-h-0 p-4 space-y-6 mr-2 lg:mr-8">
       <!-- 欢迎消息 - 显示当没有当前会话或当前会话没有消息时 -->
@@ -68,7 +68,7 @@
         </div>
 
         <!-- AI消息内容框 - 仅在内容不为空时显示 -->
-        <div v-if="message.role === 'assistant' && message.content" :class="[
+        <div :key="forceUpdateKey" v-if="message.role === 'assistant' && message.content" :class="[
           'w-full max-w-full rounded-sm px-4 py-3 mx-2 md:mx-4 lg:mx-8',
           'bg-gray-200/20 dark:bg-gray-800/20 text-gray-800 dark:text-gray-200'
         ]">
@@ -247,6 +247,7 @@ const isLoading = ref(false);
 const forceUpdateKey = ref(0); // 用于强制组件重新渲染
 const isHoveringSubmitButton = ref(false); // 鼠标是否悬停在提交按钮上
 const abortController = ref<AbortController | null>(null); // 用于取消请求的控制器
+const scrollTimeout = ref<NodeJS.Timeout | null>(null); // 滚动防抖定时器
 
 /**
  * @description 根据厂家ID获取厂家图标
@@ -376,6 +377,19 @@ const stopGeneration = async () => {
 
   // 重置加载状态
   isLoading.value = false;
+  
+  // 确保已生成的内容被保存到本地存储
+  if (currentSession.value && currentSession.value.messages.length > 0) {
+    const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
+    if (lastMessage.role === 'assistant' && lastMessage.content) {
+      // 更新会话时间戳
+      currentSession.value.updatedAt = formatDate(new Date());
+      // 保存到本地存储
+      saveSessionsToLocalStorage();
+      // 强制重新渲染
+      forceUpdateKey.value++;
+    }
+  }
   
   // 显示停止提示
   toast.info('已停止生成', {
@@ -521,8 +535,8 @@ const handleSendMessage = async () => {
   inputMessage.value = '';
   isLoading.value = true;
 
-  // 滚动到底部
-  scrollToBottom();
+  // 立即滚动到底部
+  scrollToBottom(true);
 
   try {
     // 创建AI消息占位符用于流式显示
@@ -534,8 +548,8 @@ const handleSendMessage = async () => {
     );
     addMessageToCurrentSession(aiMessage);
 
-    // 滚动到底部
-    scrollToBottom();
+    // 立即滚动到底部
+    scrollToBottom(true);
 
     // 构建要发送的消息（使用除最后一个消息外的所有消息，避免重复添加当前用户消息）
     const messagesToSend = (currentSession.value?.messages.slice(0, -1) || []);
@@ -549,8 +563,14 @@ const handleSendMessage = async () => {
           const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
           if (lastMessage.role === 'assistant') {
             lastMessage.content = content;
+            // 更新会话时间戳
+            currentSession.value.updatedAt = formatDate(new Date());
+            // 实时保存到本地存储，确保即使停止生成也不会丢失已生成的内容
+            saveSessionsToLocalStorage();
             // 强制重新渲染以显示更新
             forceUpdateKey.value++;
+            // 在内容更新时滚动到底部
+            scrollToBottom();
           }
         }
       },
@@ -574,10 +594,17 @@ const handleSendMessage = async () => {
       console.log('请求已被用户取消');
       
       // 如果AI消息已经创建但内容为空，移除这个空消息
+      // 如果有部分内容，则保留并保存到本地存储
       if (currentSession.value && currentSession.value.messages.length > 0) {
         const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
-        if (lastMessage.role === 'assistant' && lastMessage.content === '') {
-          currentSession.value.messages.pop();
+        if (lastMessage.role === 'assistant') {
+          if (lastMessage.content === '') {
+            // 内容为空，移除消息
+            currentSession.value.messages.pop();
+          } else {
+            // 有部分内容，保留并更新会话时间戳
+            currentSession.value.updatedAt = formatDate(new Date());
+          }
           saveSessionsToLocalStorage();
           forceUpdateKey.value++;
         }
@@ -613,15 +640,41 @@ const handleSendMessage = async () => {
 };
 
 /**
- * @description 滚动到页面底部
+ * @description 滚动到页面底部（带防抖机制）
+ * @param {boolean} immediate - 是否立即滚动，不使用防抖
  */
-const scrollToBottom = () => {
-  nextTick(() => {
-    window.scrollTo({
-      top: document.documentElement.scrollHeight,
-      behavior: 'smooth'
+const scrollToBottom = (immediate: boolean = false) => {
+  // 如果是立即滚动，清除现有的防抖定时器
+  if (immediate && scrollTimeout.value) {
+    clearTimeout(scrollTimeout.value);
+    scrollTimeout.value = null;
+  }
+
+  // 立即滚动的情况
+  if (immediate) {
+    nextTick(() => {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth'
+      });
     });
-  });
+    return;
+  }
+
+  // 使用防抖机制，避免频繁滚动
+  if (scrollTimeout.value) {
+    clearTimeout(scrollTimeout.value);
+  }
+
+  scrollTimeout.value = setTimeout(() => {
+    nextTick(() => {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth'
+      });
+    });
+    scrollTimeout.value = null;
+  }, 100); // 100ms 防抖延迟
 };
 
 /**
@@ -699,8 +752,8 @@ const regenerateMessage = async (messageIndex: number) => {
     );
     addMessageToCurrentSession(newAiMessage);
 
-    // 滚动到底部
-    scrollToBottom();
+    // 立即滚动到底部
+    scrollToBottom(true);
 
     // 构建要发送的消息（使用到用户消息为止的所有消息）
     const messagesToSend = messages.slice(0, userMessageIndex + 1);
@@ -714,8 +767,14 @@ const regenerateMessage = async (messageIndex: number) => {
           const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
           if (lastMessage.role === 'assistant') {
             lastMessage.content = content;
+            // 更新会话时间戳
+            currentSession.value.updatedAt = formatDate(new Date());
+            // 实时保存到本地存储，确保即使停止生成也不会丢失已生成的内容
+            saveSessionsToLocalStorage();
             // 强制重新渲染以显示更新
             forceUpdateKey.value++;
+            // 在内容更新时滚动到底部
+            scrollToBottom();
           }
         }
       },
@@ -739,10 +798,17 @@ const regenerateMessage = async (messageIndex: number) => {
       console.log('重新生成请求已被用户取消');
       
       // 如果AI消息已经创建但内容为空，移除这个空消息
+      // 如果有部分内容，则保留并保存到本地存储
       if (currentSession.value && currentSession.value.messages.length > 0) {
         const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
-        if (lastMessage.role === 'assistant' && lastMessage.content === '') {
-          currentSession.value.messages.pop();
+        if (lastMessage.role === 'assistant') {
+          if (lastMessage.content === '') {
+            // 内容为空，移除消息
+            currentSession.value.messages.pop();
+          } else {
+            // 有部分内容，保留并更新会话时间戳
+            currentSession.value.updatedAt = formatDate(new Date());
+          }
           saveSessionsToLocalStorage();
           forceUpdateKey.value++;
         }
