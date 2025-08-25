@@ -203,7 +203,13 @@ const currentSessionId = computed(() => sessionsStore?.currentSessionId?.value |
 const currentSession = computed(() => sessionsStore?.currentSession?.value || null);
 const addMessageToCurrentSession = (message: Message) => sessionsStore?.addMessageToCurrentSession(message);
 const selectSession = (sessionId: string) => sessionsStore?.selectSession(sessionId);
-const saveSessionsToLocalStorage = () => sessionsStore?.saveSessionsToLocalStorage();
+const saveSessionsToLocalStorage = () => {
+  if (sessionsStore) {
+    sessionsStore.saveSessionsToLocalStorage();
+  } else {
+    console.error('sessionsStore is not available');
+  }
+};
 const createMessage = (content: string, role: 'user' | 'assistant', providerId?: string, modelId?: string): Message => {
   const message = sessionsStore?.createMessage(content, role, providerId, modelId);
   if (message) {

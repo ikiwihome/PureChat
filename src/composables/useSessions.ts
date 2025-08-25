@@ -243,7 +243,9 @@ const createSessionsStore = () => {
         }
       }
     } catch (error) {
-      // 如果加载失败且没有会话，创建一个新的空会话并保存
+      console.error('加载会话数据失败:', error)
+      // 仅在完全没有会话数据时才创建新会话
+      // 避免在解析失败时覆盖现有数据
       if (sessions.value.length === 0) {
         createNewSession()
         saveSessionsToLocalStorage()
@@ -277,9 +279,10 @@ const createSessionsStore = () => {
 
   // 初始化时从本地存储加载会话（仅在客户端执行）
   if (typeof window !== 'undefined') {
+    // 确保在加载完成后再检查是否需要创建新会话
     loadSessionsFromLocalStorage()
 
-    // 如果没有会话，创建一个新的
+    // 如果没有会话，创建一个新的（在加载完成后检查）
     if (sessions.value.length === 0) {
       createNewSession()
     }
@@ -301,9 +304,11 @@ const createSessionsStore = () => {
 // 会话状态管理（单例模式）
 export const useSessions = () => {
   // 确保在客户端才创建实例
-  if (typeof window !== 'undefined' && !sessionsInstance) {
-    sessionsInstance = createSessionsStore()
-  } else if (typeof window === 'undefined' && !sessionsInstance) {
+  if (typeof window !== 'undefined') {
+    if (!sessionsInstance) {
+      sessionsInstance = createSessionsStore()
+    }
+  } else if (!sessionsInstance) {
     // 在服务器端返回一个空实现的 mock 对象
     sessionsInstance = {
       sessions: ref([]),
