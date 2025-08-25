@@ -88,11 +88,7 @@ export default defineNuxtConfig({
   },
 
   // 运行时配置
-  runtimeConfig: {    
-    // 统一的API配置
-    defaultApiKey: process.env.DEFAULT_API_KEY,
-    defaultBaseURL: process.env.DEFAULT_BASE_URL,
-    
+  runtimeConfig: {
     // 公共配置（前端可访问）
     public: {
       appName: 'PureChat',

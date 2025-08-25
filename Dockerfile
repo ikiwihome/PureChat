@@ -37,6 +37,9 @@ EXPOSE 3000
 
 # 设置 NODE_ENV 为 production，以确保生产环境优化
 ENV NODE_ENV=production
+ENV DEFAULT_API_KEY=sk-your_api_key_here
+ENV DEFAULT_BASE_URL=https://api.openai.com/v1
+
 
 # 定义容器启动时执行的命令
 # 运行 Nuxt.js 服务器的入口文件，默认是 .output/server/index.mjs

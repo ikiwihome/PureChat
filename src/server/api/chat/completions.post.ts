@@ -16,7 +16,6 @@ export default defineEventHandler(async (event) => {
     }
 
     // 获取API密钥和提供商配置
-    const config = useRuntimeConfig()
     const provider = body.provider || 'deepseek' // 默认使用DeepSeek
     const model = body.model || 'deepseek-chat' // 默认模型
 
@@ -24,7 +23,7 @@ export default defineEventHandler(async (event) => {
     const customApiConfig = body.customApiConfig || {}
 
     // 根据提供商选择API配置
-    const apiConfig = getApiConfig(provider, config, customApiConfig)
+    const apiConfig = getApiConfig(provider, customApiConfig)
 
     // 处理系统提示词（如果提供）
     let messages = [...body.messages];
@@ -83,14 +82,13 @@ export default defineEventHandler(async (event) => {
 /**
  * 获取API配置
  * @param provider 服务提供商
- * @param config 运行时配置
  * @param customApiConfig 自定义API配置
  */
-function getApiConfig(provider: string, config: any, customApiConfig: any = {}) {
-  // 统一的OPENAI兼容API配置
+function getApiConfig(provider: string, customApiConfig: any = {}) {
+  // 统一的OPENAI兼容API配置 - 直接从环境变量读取
   const defaultApiConfig = {
-    apiKey: config.defaultApiKey,
-    baseUrl: config.defaultBaseURL || 'https://api.openai.com/v1' // 统一的BaseURL，默认为OpenAI
+    apiKey: process.env.DEFAULT_API_KEY,
+    baseUrl: process.env.DEFAULT_BASE_URL || 'https://api.openai.com/v1' // 统一的BaseURL，默认为OpenAI
   }
 
   // 优先使用自定义API配置
