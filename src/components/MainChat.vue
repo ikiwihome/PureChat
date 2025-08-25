@@ -570,8 +570,19 @@ const handleSendMessage = async () => {
     );
   } catch (error: any) {
     // 检查是否是用户主动取消的请求
-    if (error.name === 'AbortError') {
+    if (error.name === 'AbortError' || error.message?.includes('aborted')) {
       console.log('请求已被用户取消');
+      
+      // 如果AI消息已经创建但内容为空，移除这个空消息
+      if (currentSession.value && currentSession.value.messages.length > 0) {
+        const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
+        if (lastMessage.role === 'assistant' && lastMessage.content === '') {
+          currentSession.value.messages.pop();
+          saveSessionsToLocalStorage();
+          forceUpdateKey.value++;
+        }
+      }
+      
       return; // 用户主动取消，不显示错误信息
     }
 
@@ -724,8 +735,19 @@ const regenerateMessage = async (messageIndex: number) => {
     );
   } catch (error: any) {
     // 检查是否是用户主动取消的请求
-    if (error.name === 'AbortError') {
+    if (error.name === 'AbortError' || error.message?.includes('aborted')) {
       console.log('重新生成请求已被用户取消');
+      
+      // 如果AI消息已经创建但内容为空，移除这个空消息
+      if (currentSession.value && currentSession.value.messages.length > 0) {
+        const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
+        if (lastMessage.role === 'assistant' && lastMessage.content === '') {
+          currentSession.value.messages.pop();
+          saveSessionsToLocalStorage();
+          forceUpdateKey.value++;
+        }
+      }
+      
       return; // 用户主动取消，不显示错误信息
     }
 

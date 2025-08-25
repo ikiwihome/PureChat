@@ -72,6 +72,16 @@ export default defineEventHandler(async (event) => {
 
     return response
   } catch (error: any) {
+    // 检查是否是用户主动中断的请求（AbortError）
+    if (error.name === 'AbortError' || error.message?.includes('aborted')) {
+      console.log('Chat completion was aborted by user')
+      // 对于用户主动中断的请求，返回特殊的响应而不是错误
+      return {
+        aborted: true,
+        message: 'Request was aborted by user'
+      }
+    }
+
     console.error('Chat completion error:', error)
 
     // 返回标准化的错误响应
@@ -211,10 +221,22 @@ async function callOpenAICompatible(apiConfig: any, requestData: any) {
     // 创建转换流来处理和增强流式响应
     const transformStream = new TransformStream({
       async transform(chunk, controller) {
+        // 检查是否已被中断
+        if (abortController.signal.aborted) {
+          controller.terminate();
+          return;
+        }
+
         const text = new TextDecoder().decode(chunk);
         const lines = text.split('\n');
 
         for (const line of lines) {
+          // 再次检查是否已被中断
+          if (abortController.signal.aborted) {
+            controller.terminate();
+            return;
+          }
+
           if (line.startsWith('data: ')) {
             const data = line.slice(6);
 
@@ -301,6 +323,11 @@ async function callOpenAICompatible(apiConfig: any, requestData: any) {
           }
         }
       }
+    });
+
+    // 监听中断信号，当请求被中断时清理资源
+    abortController.signal.addEventListener('abort', () => {
+      console.log('Transform stream was cancelled due to abort signal');
     });
 
     return originalStream.pipeThrough(transformStream);
