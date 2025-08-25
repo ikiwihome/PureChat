@@ -2,6 +2,10 @@
  * OpenAI兼容的聊天完成API端点
  * 支持多种AI服务提供商
  */
+
+// 导入停止功能
+import { registerStreamController } from './stop.post';
+
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event)
@@ -173,13 +177,22 @@ async function callOpenAICompatible(apiConfig: any, requestData: any) {
     return Math.round(chineseCharCount * 1.5 + englishCharCount * 0.25);
   };
 
+  // 创建 AbortController 用于中断请求
+  const abortController = new AbortController();
+  
+  // 如果是流式请求，注册控制器以便可以被停止
+  if (stream) {
+    registerStreamController(abortController);
+  }
+
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     },
-    body: JSON.stringify(requestData)
+    body: JSON.stringify(requestData),
+    signal: abortController.signal // 添加中断信号
   })
 
   if (!response.ok) {

@@ -91,7 +91,7 @@
           <!-- 左侧：消息时间和操作按钮 -->
           <div class="flex items-center space-x-2">
             <!-- 消息时间 -->
-            <span class="text-xs text-gray-500 dark:text-gray-400">
+            <span class="text-xs text-gray-500 dark:text-gray-300">
               {{ formatTime(message.timestamp) }}
             </span>
 
@@ -120,7 +120,7 @@
 
           <!-- 右侧：统计信息（仅对AI消息显示） -->
           <div v-if="message.role === 'assistant' && message.stats" class="flex items-center space-x-2">
-            <div class="text-gray-500 dark:text-gray-400 flex items-center space-x-2">
+            <div class="text-gray-500 dark:text-gray-300 flex items-center space-x-2">
               <!-- 第一个token时间 -->
               <span class="text-xs" v-if="message.stats.firstTokenTime !== undefined"
                 :title="`首字时延${message.stats.firstTokenTime || 0}ms`">
@@ -158,14 +158,27 @@
           <textarea ref="inputRef" v-model="inputMessage" placeholder="输入您的问题..."
             class="min-h-[40px] max-h-[200px] resize-none pl-8 pr-10 sm:pr-12 py-[10px] break-all break-words overflow-wrap-anywhere border-2 placeholder:text-muted-foreground focus-visible:ring-0 focus:outline-none focus:ring-0 focus:ring-opacity-0 focus:ring-offset-0 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 flex field-sizing-content w-full rounded-2xl bg-transparent outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-md"
             :disabled="isLoading" @keydown="handleKeydown" />
-          <Button type="submit" size="icon" class="absolute right-4 bottom-2 h-8 w-8"
-            :disabled="!inputMessage.trim() || isLoading">
+          <Button 
+            type="submit" 
+            size="icon" 
+            class="absolute right-4 bottom-2 h-8 w-8 transition-colors"
+            :disabled="!inputMessage.trim() && !isLoading"
+            @mouseenter="isHoveringSubmitButton = true"
+            @mouseleave="isHoveringSubmitButton = false"
+            @click="isLoading && isHoveringSubmitButton ? stopGeneration() : undefined">
+            <!-- 正常状态：发送图标 -->
             <svg v-if="!isLoading" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
               fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 19V5" />
               <path d="M5 12l7-7 7 7" />
             </svg>
-            <div v-else class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <!-- 加载状态且未悬停：加载动画 -->
+            <div v-else-if="!isHoveringSubmitButton" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <!-- 加载状态且悬停：停止图标 -->
+            <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="6" y="6" width="12" height="12" rx="2" ry="2" />
+            </svg>
           </Button>
         </div>
       </form>
@@ -232,6 +245,8 @@ const inputRef = ref<HTMLTextAreaElement | null>(null);
 const messagesContainer = ref<HTMLDivElement | null>(null);
 const isLoading = ref(false);
 const forceUpdateKey = ref(0); // 用于强制组件重新渲染
+const isHoveringSubmitButton = ref(false); // 鼠标是否悬停在提交按钮上
+const abortController = ref<AbortController | null>(null); // 用于取消请求的控制器
 
 /**
  * @description 根据厂家ID获取厂家图标
@@ -338,6 +353,38 @@ const handleKeydown = (event: KeyboardEvent) => {
 };
 
 /**
+ * @description 停止AI输出
+ */
+const stopGeneration = async () => {
+  if (abortController.value) {
+    // 取消当前请求
+    abortController.value.abort();
+    abortController.value = null;
+  }
+
+  // 发送停止请求到服务端
+  try {
+    await fetch('/api/chat/stop', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+  } catch (error) {
+    console.warn('Failed to send stop request to server:', error);
+  }
+
+  // 重置加载状态
+  isLoading.value = false;
+  
+  // 显示停止提示
+  toast.info('已停止生成', {
+    position: 'top-center',
+    duration: 2000,
+  });
+};
+
+/**
  * @description 调用AI API获取回复（共享的API调用逻辑）
  * @param {Message[]} messages - 要发送的消息数组
  * @param {Function} onContentUpdate - 内容更新回调函数
@@ -370,6 +417,9 @@ const callAIApi = async (messages: Message[], onContentUpdate: (content: string)
     }
   }
 
+  // 创建 AbortController 用于取消请求
+  abortController.value = new AbortController();
+
   // 调用后端API获取AI回复（启用流式传输）
   const response = await fetch('/api/chat/completions', {
     method: 'POST',
@@ -388,7 +438,8 @@ const callAIApi = async (messages: Message[], onContentUpdate: (content: string)
       customApiConfig: customApiConfig,
       systemPrompt: systemPromptValue,
       stream: true // 启用流式传输
-    })
+    }),
+    signal: abortController.value.signal // 添加取消信号
   });
 
   if (!response.ok) {
@@ -518,6 +569,12 @@ const handleSendMessage = async () => {
       }
     );
   } catch (error: any) {
+    // 检查是否是用户主动取消的请求
+    if (error.name === 'AbortError') {
+      console.log('请求已被用户取消');
+      return; // 用户主动取消，不显示错误信息
+    }
+
     console.error('API调用失败:', error);
 
     // 显示错误信息
@@ -666,6 +723,12 @@ const regenerateMessage = async (messageIndex: number) => {
       }
     );
   } catch (error: any) {
+    // 检查是否是用户主动取消的请求
+    if (error.name === 'AbortError') {
+      console.log('重新生成请求已被用户取消');
+      return; // 用户主动取消，不显示错误信息
+    }
+
     console.error('API调用失败:', error);
 
     // 显示错误信息
@@ -839,12 +902,11 @@ onMounted(() => {
 }
 
 .dark .markdown-content :deep() code {
-  background-color: #374151;
   color: #e5e7eb;
 }
 
 .dark .markdown-content :deep() pre {
-  background-color: #111827;
+  background-color: #212121;
 }
 
 .dark .markdown-content :deep() th,
@@ -853,6 +915,6 @@ onMounted(() => {
 }
 
 .dark .markdown-content :deep() th {
-  background-color: #1f2937;
+  background-color: #353535;
 }
 </style>
