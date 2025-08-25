@@ -136,6 +136,42 @@ async function callOpenAICompatible(apiConfig: any, requestData: any) {
   let promptTokens = 0;
   let cachedTokens = 0;
   let completionTokens = 0;
+  let hasReceivedUsage = false; // 跟踪是否收到了有效的usage数据
+  let accumulatedContent = ''; // 用于累积AI回复内容以计算token
+
+  // 计算输入消息的token数量
+  const calculatePromptTokens = (messages: any[]): number => {
+    if (!messages || !Array.isArray(messages)) return 0;
+    
+    // 简单的token估算方法：对于中文，大约1个汉字=1.5个token
+    // 对于英文，大约1个单词=1.3个token
+    // 这里使用更简单的基于字符数的估算：大约4个字符=1个token
+    let totalTokens = 0;
+    
+    for (const message of messages) {
+      if (message.content) {
+        const text = message.content;
+        const chineseCharCount = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+        const englishCharCount = text.length - chineseCharCount;
+        
+        // 中文按1.5个token/字符，英文按0.25个token/字符（4个字符=1个token）
+        totalTokens += Math.round(chineseCharCount * 1.5 + englishCharCount * 0.25);
+      }
+    }
+    
+    return totalTokens;
+  };
+
+  // 计算回复内容的token数量
+  const calculateCompletionTokens = (content: string): number => {
+    if (!content) return 0;
+    
+    const chineseCharCount = (content.match(/[\u4e00-\u9fa5]/g) || []).length;
+    const englishCharCount = content.length - chineseCharCount;
+    
+    // 中文按1.5个token/字符，英文按0.25个token/字符（4个字符=1个token）
+    return Math.round(chineseCharCount * 1.5 + englishCharCount * 0.25);
+  };
 
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
@@ -171,6 +207,33 @@ async function callOpenAICompatible(apiConfig: any, requestData: any) {
 
             // 处理 [DONE] 消息 - 这是OpenAI流式响应结束的标志
             if (data === '[DONE]') {
+              // 在发送DONE之前，检查是否收到了有效的usage数据
+              if (!hasReceivedUsage) {
+                // 计算本地token统计数据作为备用
+                promptTokens = calculatePromptTokens(requestData.messages);
+                completionTokens = calculateCompletionTokens(accumulatedContent);
+                cachedTokens = 0; // 缓存token始终为0
+                
+                // 创建包含usage和stats的数据块
+                const usageData = {
+                  usage: {
+                    prompt_tokens: promptTokens,
+                    completion_tokens: completionTokens,
+                    total_tokens: promptTokens + completionTokens,
+                    prompt_tokens_details: {
+                      cached_tokens: cachedTokens
+                    }
+                  },
+                  stats: {
+                    firstTokenTime: firstTokenTime,
+                    totalTime: Date.now() - requestStartTime
+                  }
+                };
+                
+                // 发送包含usage和stats的数据块
+                controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(usageData)}\n`));
+              }
+              
               controller.enqueue(new TextEncoder().encode(`${line}\n`));
               continue;
             }
@@ -184,6 +247,11 @@ async function callOpenAICompatible(apiConfig: any, requestData: any) {
                 firstTokenTime = Date.now() - requestStartTime;
               }
 
+              // 累积AI回复内容用于token计算
+              if (parsed.choices?.[0]?.delta?.content) {
+                accumulatedContent += parsed.choices[0].delta.content;
+              }
+
               // 检查是否包含角色信息（通常在第一个数据块中）
               if (parsed.choices?.[0]?.delta?.role) {
                 // 添加角色信息到响应中，确保前端能识别这是assistant消息
@@ -192,6 +260,8 @@ async function callOpenAICompatible(apiConfig: any, requestData: any) {
 
               // 检查是否包含usage数据且不为null，如果是则在这个数据块中追加stats信息
               if (parsed.usage !== null && parsed.usage !== undefined) {
+                hasReceivedUsage = true; // 标记已收到有效的usage数据
+                
                 // 在当前数据块中追加stats信息
                 parsed.stats = {
                   firstTokenTime: firstTokenTime,
