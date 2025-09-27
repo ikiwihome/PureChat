@@ -23,6 +23,6 @@ const forwardedProps = useForwardProps(delegatedProps)
       )
     "
   >
-    <slot />
+    <slot ></slot>
   </MenubarTrigger>
 </template>

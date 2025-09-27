@@ -21,13 +21,25 @@
               </div>
             </MenubarTrigger>
             <MenubarContent class="border-none">
-              <MenubarItem v-for="provider in providers" :key="provider.id" @select="selectProvider(provider)" class="flex items-center justify-between">
+              <MenubarItem v-for="provider in providers"
+:key="provider.id"
+@select="selectProvider(provider)"
+class="flex items-center justify-between">
                 <div class="flex items-center gap-4 w-40">
                   <img :src="provider.icon" :alt="provider.name" class="h-4 w-4 dark:filter dark:invert" />
                   <span>{{ provider.name }}</span>
                 </div>
-                <svg v-if="selectedProvider.id === provider.id" class="h-4 w-4 mr-0 icon-md block text-black dark:text-gray-200" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path fill-rule="evenodd" clip-rule="evenodd" d="M2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12ZM16.0755 7.93219C16.5272 8.25003 16.6356 8.87383 16.3178 9.32549L11.5678 16.0755C11.3931 16.3237 11.1152 16.4792 10.8123 16.4981C10.5093 16.517 10.2142 16.3973 10.0101 16.1727L7.51006 13.4227C7.13855 13.014 7.16867 12.3816 7.57733 12.0101C7.98598 11.6386 8.61843 11.6687 8.98994 12.0773L10.6504 13.9039L14.6822 8.17451C15 7.72284 15.6238 7.61436 16.0755 7.93219Z" fill="currentColor"></path>
+                <svg v-if="selectedProvider.id === provider.id"
+class="h-4 w-4 mr-0 icon-md block text-black dark:text-gray-200"
+width="24"
+height="24"
+viewBox="0 0 24 24"
+fill="none"
+xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd"
+clip-rule="evenodd"
+d="M2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12ZM16.0755 7.93219C16.5272 8.25003 16.6356 8.87383 16.3178 9.32549L11.5678 16.0755C11.3931 16.3237 11.1152 16.4792 10.8123 16.4981C10.5093 16.517 10.2142 16.3973 10.0101 16.1727L7.51006 13.4227C7.13855 13.014 7.16867 12.3816 7.57733 12.0101C7.98598 11.6386 8.61843 11.6687 8.98994 12.0773L10.6504 13.9039L14.6822 8.17451C15 7.72284 15.6238 7.61436 16.0755 7.93219Z"
+fill="currentColor"/>
                 </svg>
               </MenubarItem>
             </MenubarContent>
@@ -156,13 +168,20 @@
                 <!-- API Base URL 设置 -->
                 <div class="space-y-2">
                   <Label class="text-sm text-muted-foreground">API Base URL</Label>
-                  <Input :model-value="providerSettings[provider.id]?.apiBaseUrl" @update:model-value="updateProviderSetting(provider.id, 'apiBaseUrl', $event)" :placeholder="getDefaultApiBaseUrl(provider.id)" class="w-full text-sm px-2 py-1 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white" />
+                  <Input :model-value="providerSettings[provider.id]?.apiBaseUrl"
+@update:model-value="updateProviderSetting(provider.id, 'apiBaseUrl', $event)"
+:placeholder="getDefaultApiBaseUrl(provider.id)"
+class="w-full text-sm px-2 py-1 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white" />
                 </div>
 
                 <!-- API KEY 设置 -->
                 <div class="space-y-2">
                   <Label class="text-sm text-muted-foreground">API KEY</Label>
-                  <Input :model-value="providerSettings[provider.id]?.apiKey" @update:model-value="updateProviderSetting(provider.id, 'apiKey', $event)" type="password" placeholder="输入您的API密钥" class="w-full text-sm px-2 py-1 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white" />
+                  <Input :model-value="providerSettings[provider.id]?.apiKey"
+@update:model-value="updateProviderSetting(provider.id, 'apiKey', $event)"
+type="password"
+placeholder="输入您的API密钥"
+class="w-full text-sm px-2 py-1 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white" />
                 </div>
               </div>
             </div>
@@ -174,7 +193,11 @@
               <Label class="font-medium">采样温度</Label>
               <span class=" text-gray-500">{{ temperature[0] }}</span>
             </div>
-            <Slider v-model="temperature" :min="0.0" :max="1.0" :step="0.1" class="w-full mt-4" />
+            <Slider v-model="temperature"
+:min="0.0"
+:max="1.0"
+:step="0.1"
+class="w-full mt-4" />
             <div class="flex justify-between text-gray-500">
               <span>0.0</span>
               <span>0.5</span>
@@ -185,7 +208,10 @@
           <!-- 系统提示词设置 -->
           <div class="space-y-4">
             <Label class="font-medium">自定义系统提示词</Label>
-            <Textarea v-model="systemPrompt" placeholder="你是一个超级智能的AI大模型，擅长准确理解用户意图，回答用户问题" rows="4" class="w-full mt-4 text-sm px-3 py-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white resize-none" />
+            <Textarea v-model="systemPrompt"
+placeholder="你是一个超级智能的AI大模型，擅长准确理解用户意图，回答用户问题"
+rows="4"
+class="w-full mt-4 text-sm px-3 py-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white resize-none" />
           </div>
 
           <!-- 保存和取消按钮 -->

@@ -7,7 +7,8 @@
         <div class="text-center max-w-md mx-auto">
           <div
             class="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-200/10 rounded-full flex items-center justify-center">
-            <img :src="props.selectedProvider.icon" :alt="props.selectedProvider.name"
+            <img :src="props.selectedProvider.icon"
+:alt="props.selectedProvider.name"
               class="h-8 w-8 dark:filter dark:invert" />
           </div>
           <h2 class="mb-5 max-w-[75vh] px-12 text-center text-lg font-medium dark:text-white md:px-0 md:text-2xl">
@@ -16,7 +17,8 @@
       </div>
 
       <!-- 消息列表 -->
-      <div v-for="(message, index) in currentSession?.messages" :key="message.id"
+      <div v-for="(message, index) in currentSession?.messages"
+:key="message.id"
         class="flex mb-10 flex-col items-start">
 
         <!-- 头像和名称区域 - 放在消息内容框外部左上角 -->
@@ -26,8 +28,15 @@
             <!-- 头像 -->
             <Avatar class="w-6 h-6">
               <AvatarFallback class="bg-blue-300 text-white text-xs">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg"
+width="12"
+height="12"
+viewBox="0 0 24 24"
+fill="none"
+                  stroke="currentColor"
+stroke-width="2"
+stroke-linecap="round"
+stroke-linejoin="round">
                   <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
@@ -44,7 +53,8 @@
             <!-- 头像 - 使用消息创建时的厂家图标 -->
             <Avatar class="w-6 h-6">
               <AvatarFallback class="bg-gray-300 text-white text-xs">
-                <img :src="getProviderIcon(message.providerId)" :alt="getProviderName(message.providerId)"
+                <img :src="getProviderIcon(message.providerId)"
+:alt="getProviderName(message.providerId)"
                   class="h-4 w-4" />
               </AvatarFallback>
             </Avatar>
@@ -68,7 +78,9 @@
         </div>
 
         <!-- AI消息内容框 - 仅在内容不为空时显示 -->
-        <div :key="forceUpdateKey" v-if="message.role === 'assistant' && message.content" :class="[
+        <div :key="forceUpdateKey"
+v-if="message.role === 'assistant' && message.content"
+:class="[
           'w-full max-w-full rounded-sm px-4 py-3 mx-2 md:mx-4 lg:mx-8',
           'bg-gray-200/20 dark:bg-gray-800/20 text-gray-800 dark:text-gray-200'
         ]">
@@ -78,7 +90,8 @@
         </div>
 
         <!-- 用户消息内容框 - 始终显示 -->
-        <div v-else-if="message.role === 'user'" :class="[
+        <div v-else-if="message.role === 'user'"
+:class="[
           'w-full max-w-full rounded-sm px-4 py-3 mx-2 md:mx-4 lg:mx-8',
           'bg-gray-200/50 dark:bg-gray-600/20 text-gray-800 dark:text-gray-200'
         ]">
@@ -97,20 +110,42 @@
 
             <!-- 复制到剪贴板按钮 -->
             <button @click="copyToClipboard(message.content)"
-              class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="复制到剪贴板">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+title="复制到剪贴板">
+              <svg xmlns="http://www.w3.org/2000/svg"
+width="14"
+height="14"
+viewBox="0 0 24 24"
+fill="none"
+                stroke="currentColor"
+stroke-width="2"
+stroke-linecap="round"
+stroke-linejoin="round"
                 class="text-gray-600 dark:text-gray-300">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <rect x="9"
+y="9"
+width="13"
+height="13"
+rx="2"
+ry="2" />
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
               </svg>
             </button>
 
             <!-- 重新生成按钮（仅对AI消息显示） -->
-            <button v-if="message.role === 'assistant'" @click="regenerateMessage(index)"
-              class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="重新生成">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            <button v-if="message.role === 'assistant'"
+@click="regenerateMessage(index)"
+              class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+title="重新生成">
+              <svg xmlns="http://www.w3.org/2000/svg"
+width="14"
+height="14"
+viewBox="0 0 24 24"
+fill="none"
+                stroke="currentColor"
+stroke-width="2"
+stroke-linecap="round"
+stroke-linejoin="round"
                 class="text-gray-600 dark:text-gray-300">
                 <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
                 <path d="M3 3v5h5" />
@@ -122,7 +157,8 @@
           <div v-if="message.role === 'assistant' && message.stats" class="flex items-center space-x-2">
             <div class="text-gray-500 dark:text-gray-300 flex items-center space-x-2">
               <!-- 第一个token时间 -->
-              <span class="text-xs" v-if="message.stats.firstTokenTime !== undefined"
+              <span class="text-xs"
+v-if="message.stats.firstTokenTime !== undefined"
                 :title="`首字时延${message.stats.firstTokenTime || 0}ms`">
                 Time To First Token: {{ message.stats.firstTokenTime }}ms
               </span>
@@ -140,7 +176,8 @@
                 {{ message.stats.completionTokens || 0 }}↓
               </span> -->
               <!-- 每秒token数 -->
-              <span class="text-xs" v-if="message.stats.totalTime !== undefined && message.stats.completionTokens !== undefined"
+              <span class="text-xs"
+v-if="message.stats.totalTime !== undefined && message.stats.completionTokens !== undefined"
                 :title="`总耗时${message.stats.totalTime || 0}ms | 输出${message.stats.completionTokens || 0}tokens`">
                 Token Per Second: {{ message.stats.totalTime > 0 ? (message.stats.completionTokens / (message.stats.totalTime / 1000)).toFixed(2) : '∞' }} tokens/s
               </span>
@@ -155,9 +192,12 @@
       class="border-t border-gray-200 dark:border-gray-800 p-4 lg:p-4 bg-white dark:bg-gray-950 sticky bottom-0 z-10">
       <form @submit.prevent="handleSendMessage">
         <div class="flex-1 relative overflow-hidden">
-          <textarea ref="inputRef" v-model="inputMessage" placeholder="输入您的问题..."
+          <textarea ref="inputRef"
+v-model="inputMessage"
+placeholder="输入您的问题..."
             class="min-h-[40px] max-h-[200px] resize-none pl-8 pr-10 sm:pr-12 py-[10px] break-all break-words overflow-wrap-anywhere border-2 placeholder:text-muted-foreground focus-visible:ring-0 focus:outline-none focus:ring-0 focus:ring-opacity-0 focus:ring-offset-0 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 flex field-sizing-content w-full rounded-2xl bg-transparent outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-md"
-            :disabled="isLoading" @keydown="handleKeydown" />
+            :disabled="isLoading"
+@keydown="handleKeydown" ></textarea>
           <Button 
             type="submit" 
             size="icon" 
@@ -167,17 +207,38 @@
             @mouseleave="isHoveringSubmitButton = false"
             @click="isLoading && isHoveringSubmitButton ? stopGeneration() : undefined">
             <!-- 正常状态：发送图标 -->
-            <svg v-if="!isLoading" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-              fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <svg v-if="!isLoading"
+xmlns="http://www.w3.org/2000/svg"
+width="16"
+height="16"
+viewBox="0 0 24 24"
+              fill="none"
+stroke="currentColor"
+stroke-width="3"
+stroke-linecap="round"
+stroke-linejoin="round">
               <path d="M12 19V5" />
               <path d="M5 12l7-7 7 7" />
             </svg>
             <!-- 加载状态且未悬停：加载动画 -->
             <div v-else-if="!isHoveringSubmitButton" class="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"></div>
             <!-- 加载状态且悬停：停止图标 -->
-            <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-              fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="6" y="6" width="12" height="12" rx="2" ry="2" />
+            <svg v-else
+xmlns="http://www.w3.org/2000/svg"
+width="16"
+height="16"
+viewBox="0 0 24 24"
+              fill="none"
+stroke="currentColor"
+stroke-width="3"
+stroke-linecap="round"
+stroke-linejoin="round">
+              <rect x="6"
+y="6"
+width="12"
+height="12"
+rx="2"
+ry="2" />
             </svg>
           </Button>
         </div>

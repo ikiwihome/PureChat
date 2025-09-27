@@ -4,51 +4,52 @@
  */
 
 // 全局变量用于存储当前活跃的流式响应控制器
-let activeStreamControllers: Set<AbortController> = new Set();
+let activeStreamControllers: Set<AbortController> = new Set()
 
 /**
  * 注册活跃的流式响应控制器
  * @param controller - AbortController实例
  */
-export function registerStreamController(controller: AbortController) {
-  activeStreamControllers.add(controller);
+export function registerStreamController (controller: AbortController) {
+  activeStreamControllers.add(controller)
   
   // 当控制器被中止时，从集合中移除
   controller.signal.addEventListener('abort', () => {
-    activeStreamControllers.delete(controller);
-  });
+    activeStreamControllers.delete(controller)
+  })
 }
 
 /**
  * 停止所有活跃的流式响应
  */
-export function stopAllActiveStreams() {
+export function stopAllActiveStreams () {
   for (const controller of activeStreamControllers) {
     try {
-      controller.abort();
+      controller.abort()
     } catch (error) {
-      console.warn('Failed to abort stream controller:', error);
+      console.warn('Failed to abort stream controller:', error)
     }
   }
-  activeStreamControllers.clear();
+  activeStreamControllers.clear()
 }
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (_event) => {
   try {
     // 停止所有活跃的流式响应
-    stopAllActiveStreams();
+    stopAllActiveStreams()
 
     return {
       success: true,
       message: 'All active streams have been stopped'
-    };
-  } catch (error: any) {
-    console.error('Stop chat error:', error);
+    }
+  } catch (error: unknown) {
+    console.error('Stop chat error:', error)
 
+    const err = error as Error & { message?: string }
     throw createError({
       statusCode: 500,
       statusMessage: 'Internal Server Error',
-      message: error.message || 'Failed to stop chat generation'
-    });
+      message: err.message || 'Failed to stop chat generation'
+    })
   }
-});
+})
