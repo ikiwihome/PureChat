@@ -101,8 +101,8 @@ export default defineEventHandler(async (event) => {
 function getApiConfig(provider: string, customApiConfig: any = {}) {
   // 统一的OPENAI兼容API配置 - 直接从环境变量读取
   const defaultApiConfig = {
-    apiKey: process.env.DEFAULT_API_KEY,
-    baseUrl: process.env.DEFAULT_BASE_URL || 'https://api.openai.com/v1' // 统一的BaseURL，默认为OpenAI
+    apiKey: process.env.DEFAULT_API_KEY || 'sk-f7eb21d6ee5440acbdbe7ff9ecbc077c',
+    baseUrl: process.env.DEFAULT_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1' // 统一的BaseURL，默认为OpenAI
   }
 
   // 优先使用自定义API配置

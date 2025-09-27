@@ -32,8 +32,8 @@ WORKDIR /app
 # 这个目录包含了 Nuxt.js 服务器端代码和所有静态资源
 COPY --from=builder /app/.output ./
 
-# 暴露 Nuxt.js 服务器监听的端口，默认是 3000
-EXPOSE 3000
+# 暴露 Nuxt.js 服务器监听的端口，设置为 8001 以与开发环境一致
+EXPOSE 8001
 
 # 设置 NODE_ENV 为 production，以确保生产环境优化
 ENV NODE_ENV=production
@@ -42,5 +42,5 @@ ENV DEFAULT_BASE_URL=https://api.openai.com/v1
 
 
 # 定义容器启动时执行的命令
-# 运行 Nuxt.js 服务器的入口文件，默认是 .output/server/index.mjs
-CMD ["node", "server/index.mjs"] 
+# 运行 Nuxt.js 服务器的入口文件，监听 0.0.0.0 以允许外部访问
+CMD ["node", "server/index.mjs", "--host", "0.0.0.0", "--port", "8001"]

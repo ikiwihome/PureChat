@@ -35,7 +35,7 @@
             </Avatar>
             <!-- 名称 -->
             <span class="text-sm select-none font-semibold">
-              用户
+              User
             </span>
           </div>
 
@@ -124,10 +124,10 @@
               <!-- 第一个token时间 -->
               <span class="text-xs" v-if="message.stats.firstTokenTime !== undefined"
                 :title="`首字时延${message.stats.firstTokenTime || 0}ms`">
-                {{ message.stats.firstTokenTime }}ms
+                Time To First Token: {{ message.stats.firstTokenTime }}ms
               </span>
               <!-- token统计 -->
-              <span class="text-xs" v-if="message.stats.promptTokens !== undefined"
+              <!-- <span class="text-xs" v-if="message.stats.promptTokens !== undefined"
                 :title="`输入${message.stats.promptTokens || 0}tokens`">
                 {{ message.stats.promptTokens || 0 }}↑
               </span>
@@ -138,11 +138,11 @@
               <span class="text-xs" v-if="message.stats.completionTokens !== undefined"
                 :title="`输出${message.stats.completionTokens || 0}tokens`">
                 {{ message.stats.completionTokens || 0 }}↓
-              </span>
-              <!-- 总耗时 -->
-              <span class="text-xs" v-if="message.stats.totalTime !== undefined"
-                :title="`总耗时${message.stats.totalTime || 0}ms`">
-                {{ message.stats.totalTime }}ms
+              </span> -->
+              <!-- 每秒token数 -->
+              <span class="text-xs" v-if="message.stats.totalTime !== undefined && message.stats.completionTokens !== undefined"
+                :title="`总耗时${message.stats.totalTime || 0}ms | 输出${message.stats.completionTokens || 0}tokens`">
+                Token Per Second: {{ message.stats.totalTime > 0 ? (message.stats.completionTokens / (message.stats.totalTime / 1000)).toFixed(2) : '∞' }} tokens/s
               </span>
             </div>
           </div>
@@ -182,9 +182,9 @@
           </Button>
         </div>
       </form>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+      <!-- <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
         按 Enter 发送，Shift + Enter 换行
-      </p>
+      </p> -->
     </div>
 
     <!-- Toaster 通知组件 -->

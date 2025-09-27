@@ -112,8 +112,8 @@ const createSessionsStore = () => {
       messages: [],
       createdAt: formatDate(now),
       updatedAt: formatDate(now),
-      providerId: 'deepseek', // 默认厂家：DeepSeek
-      modelId: 'deepseek-chat' // 默认模型：deepseek-chat
+      providerId: 'meta', // 默认厂家：DeepSeek
+      modelId: 'deepseek-v3.1' // 默认模型：deepseek-chat
     }
 
     // 使用响应式方式更新数组，确保触发重新渲染
@@ -229,8 +229,8 @@ const createSessionsStore = () => {
               } : undefined
             })),
             // 为现有会话添加默认的 providerId 和 modelId（数据迁移）
-            providerId: session.providerId || 'deepseek',
-            modelId: session.modelId || 'deepseek-chat'
+            providerId: session.providerId || 'meta',
+            modelId: session.modelId || 'deepseek-v3.1'
           }))
 
           // 验证当前会话ID是否存在于会话列表中

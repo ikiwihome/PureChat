@@ -124,7 +124,7 @@ const providers = ref<Provider[]>(modelData.providers);
  */
 const getProviderIcon = (providerId: string): string => {
   const provider = providers.value.find(p => p.id === providerId);
-  return provider?.icon || '/deepseek.svg'; // 默认图标
+  return provider?.icon || '/meta.svg'; // 默认图标
 };
 
 const props = defineProps<SidebarProps>();

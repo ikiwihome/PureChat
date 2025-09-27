@@ -3,6 +3,10 @@ import tailwindcss from "@tailwindcss/vite";
 import pkg from './package.json';
 
 export default defineNuxtConfig({
+  devServer: {
+    host: '0.0.0.0',
+    port: 8001
+  },
   compatibilityDate: '2025-05-22',
   devtools: { enabled: false },
   css: ['./src/assets/css/tailwind.css'],
@@ -16,17 +20,6 @@ export default defineNuxtConfig({
   modules: ['shadcn-nuxt', '@nuxtjs/color-mode', 'vue-sonner/nuxt'],
   colorMode: {
     classSuffix: ''
-  },
-  shadcn: {
-    /**
-     * Prefix for all the imported component
-     */
-    prefix: '',
-    /**
-     * Directory that the component lives in.
-     * @default "./src/components/ui"
-     */
-    componentDir: './src/components/ui'
   },
   nitro: {
     // 移除或注释掉 preset: 'static'，这样Nitro会默认构建一个Node.js服务器预设
@@ -69,7 +62,7 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: 'PureChat 空灵智语AI',
+      title: 'ChatBot',
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1.0, shrink-to-fit=no',
       htmlAttrs: {

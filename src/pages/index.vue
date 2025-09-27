@@ -66,16 +66,16 @@
         </div>
         <div class="flex fixed top-4 right-0 sm:right-2">
           <!-- 设置图标按钮，在移动端隐藏 -->
-          <Button variant="ghost" size="icon" @click="showSettingsSheet = true" class="no-hover">
+          <!-- <Button variant="ghost" size="icon" @click="showSettingsSheet = true" class="no-hover">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path
                 d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
               <circle cx="12" cy="12" r="3" />
             </svg>
-          </Button>
+          </Button> -->
           <!-- 费用说明图标按钮，在移动端隐藏 -->
-          <Button variant="ghost" size="icon" @click="showPricingSheet = true" class="no-hover hidden sm:flex">
+          <!-- <Button variant="ghost" size="icon" @click="showPricingSheet = true" class="no-hover hidden sm:flex">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
               <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
               <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
@@ -87,12 +87,12 @@
                   stroke-width="1.5" stroke-linecap="round"></path>
               </g>
             </svg>
-          </Button>
+          </Button> -->
           <!-- 根据当前颜色模式显示太阳或月亮图标 -->
-          <Button variant="ghost" size="icon" @click="toggleDarkMode" class="no-hover">
+          <!-- <Button variant="ghost" size="icon" @click="toggleDarkMode" class="no-hover">
             <Sun v-if="colorMode.value === 'light'" class="h-5 w-5" />
             <Moon v-else class="h-5 w-5" />
-          </Button>
+          </Button> -->
         </div>
       </header>
       <!-- 主内容区域，增加顶部填充以避免被固定头部遮挡，并占据剩余高度 -->
