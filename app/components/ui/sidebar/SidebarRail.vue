@@ -28,6 +28,6 @@ const { toggleSidebar } = useSidebar()
     )"
     @click="toggleSidebar"
   >
-    <slot />
+    <slot ></slot>
   </button>
 </template>

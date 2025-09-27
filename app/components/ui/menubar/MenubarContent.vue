@@ -36,7 +36,7 @@ const forwardedProps = useForwardProps(delegatedProps)
         )
       "
     >
-      <slot />
+      <slot ></slot>
     </MenubarContent>
   </MenubarPortal>
 </template>

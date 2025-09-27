@@ -37,7 +37,7 @@ const forwardedProps = useForwardProps(delegatedProps)
     </span>
 
     <SelectItemText>
-      <slot />
+      <slot ></slot>
     </SelectItemText>
   </SelectItem>
 </template>
