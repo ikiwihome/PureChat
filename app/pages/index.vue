@@ -148,7 +148,7 @@
                   <img :src="provider.icon" :alt="provider.name" class="h-4 w-4 dark:filter dark:invert" />
                   <span>{{ provider.name }}</span>
                 </div>
-                <Switch v-model="providerSettings[provider.id]?.useCustomApi" @update:model-value="initProviderSettings(provider.id)" />
+                <Switch :model-value="providerSettings[provider.id]?.useCustomApi" @update:model-value="updateProviderSetting(provider.id, 'useCustomApi', $event)" />
               </div>
 
               <!-- 自定义API设置（当SWITCH开启时显示） -->
@@ -156,13 +156,13 @@
                 <!-- API Base URL 设置 -->
                 <div class="space-y-2">
                   <Label class="text-sm text-muted-foreground">API Base URL</Label>
-                  <Input v-model="providerSettings[provider.id]?.apiBaseUrl" :placeholder="getDefaultApiBaseUrl(provider.id)" class="w-full text-sm px-2 py-1 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white" />
+                  <Input :model-value="providerSettings[provider.id]?.apiBaseUrl" @update:model-value="updateProviderSetting(provider.id, 'apiBaseUrl', $event)" :placeholder="getDefaultApiBaseUrl(provider.id)" class="w-full text-sm px-2 py-1 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white" />
                 </div>
 
                 <!-- API KEY 设置 -->
                 <div class="space-y-2">
                   <Label class="text-sm text-muted-foreground">API KEY</Label>
-                  <Input v-model="providerSettings[provider.id]?.apiKey" type="password" placeholder="输入您的API密钥" class="w-full text-sm px-2 py-1 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white" />
+                  <Input :model-value="providerSettings[provider.id]?.apiKey" @update:model-value="updateProviderSetting(provider.id, 'apiKey', $event)" type="password" placeholder="输入您的API密钥" class="w-full text-sm px-2 py-1 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white" />
                 </div>
               </div>
             </div>
@@ -421,6 +421,21 @@
         apiBaseUrl: getDefaultApiBaseUrl(providerId),
         apiKey: ''
       };
+    }
+  };
+
+  /**
+   * @description 更新厂家设置
+   * @param {string} providerId - 厂家ID
+   * @param {string} key - 设置键名
+   * @param {any} value - 设置值
+   */
+  const updateProviderSetting = (providerId: string, key: 'useCustomApi' | 'apiBaseUrl' | 'apiKey', value: any) => {
+    initProviderSettings(providerId);
+    const setting = providerSettings.value[providerId];
+    if (setting) {
+      // 使用类型断言来解决TypeScript类型检查问题
+      (setting as any)[key] = value;
     }
   };
 
