@@ -150,6 +150,10 @@ const setOpen = sidebar.setOpen;
  */
 const groupedSessions = computed(() => {
   const groups: Record<string, any[]> = {};
+  // 显式初始化groups对象
+  Object.keys(groups).forEach(key => {
+    groups[key] = [];
+  });
   const now = new Date();
   // 创建不带时间的日期对象，以便于按天比较
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -187,10 +191,8 @@ const groupedSessions = computed(() => {
       groupKey = `${sessionDate.getFullYear()}年`;
     }
 
-    if (!groups[groupKey]) {
-      groups[groupKey] = [];
-    }
-    groups[groupKey].push(session);
+    groups[groupKey] = groups[groupKey] || [];
+    groups[groupKey]!.push(session); // 使用非空断言
   }
 
   // 3. 定义分组的显示顺序并对分组键进行排序
@@ -224,7 +226,7 @@ const groupedSessions = computed(() => {
   // 4. 根据排序后的键创建最终的数组，以保证模板渲染顺序
   return sortedGroupKeys.map(key => ({
     groupName: key,
-    sessions: groups[key]
+    sessions: groups[key] || [] // 确保sessions始终是数组
   }));
 });
 

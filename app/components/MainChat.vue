@@ -194,6 +194,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed, nextTick } from 'vue';
+// 移除node:timers导入，使用ReturnType替代
 import { Button } from '~/components/ui/button';
 import { Avatar, AvatarFallback } from '~/components/ui/avatar';
 import { Toaster, toast } from 'vue-sonner';
@@ -247,7 +248,7 @@ const isLoading = ref(false);
 const forceUpdateKey = ref(0); // 用于强制组件重新渲染
 const isHoveringSubmitButton = ref(false); // 鼠标是否悬停在提交按钮上
 const abortController = ref<AbortController | null>(null); // 用于取消请求的控制器
-const scrollTimeout = ref<NodeJS.Timeout | null>(null); // 滚动防抖定时器
+const scrollTimeout = ref<ReturnType<typeof setTimeout> | null>(null); // 滚动防抖定时器
 
 /**
  * @description 根据厂家ID获取厂家图标
@@ -379,9 +380,9 @@ const stopGeneration = async () => {
   isLoading.value = false;
   
   // 确保已生成的内容被保存到本地存储
-  if (currentSession.value && currentSession.value.messages.length > 0) {
+  if (currentSession.value?.messages?.length) {
     const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
-    if (lastMessage.role === 'assistant' && lastMessage.content) {
+    if (lastMessage && lastMessage.role === 'assistant' && lastMessage.content) {
       // 更新会话时间戳
       currentSession.value.updatedAt = formatDate(new Date());
       // 保存到本地存储
@@ -561,7 +562,7 @@ const handleSendMessage = async () => {
         // 更新消息内容
         if (currentSession.value && currentSession.value.messages.length > 0) {
           const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
-          if (lastMessage.role === 'assistant') {
+          if (lastMessage && lastMessage.role === 'assistant') {
             lastMessage.content = content;
             // 更新会话时间戳
             currentSession.value.updatedAt = formatDate(new Date());
@@ -578,7 +579,7 @@ const handleSendMessage = async () => {
         // 更新统计信息
         if (currentSession.value && currentSession.value.messages.length > 0) {
           const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
-          if (lastMessage.role === 'assistant') {
+          if (lastMessage && lastMessage.role === 'assistant') {
             lastMessage.stats = stats;
             // 保存到本地存储
             saveSessionsToLocalStorage();
@@ -597,7 +598,7 @@ const handleSendMessage = async () => {
       // 如果有部分内容，则保留并保存到本地存储
       if (currentSession.value && currentSession.value.messages.length > 0) {
         const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
-        if (lastMessage.role === 'assistant') {
+        if (lastMessage && lastMessage.role === 'assistant') {
           if (lastMessage.content === '') {
             // 内容为空，移除消息
             currentSession.value.messages.pop();
@@ -624,8 +625,8 @@ const handleSendMessage = async () => {
 
     // 如果AI消息已经创建但内容为空，更新为错误消息
     if (currentSession.value && currentSession.value.messages.length > 0) {
-      const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
-      if (lastMessage.role === 'assistant' && lastMessage.content === '') {
+        const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
+        if (lastMessage && lastMessage.role === 'assistant' && lastMessage.content === '') {
         lastMessage.content = `抱歉，AI服务暂时不可用。错误信息: ${errorMessage}`;
         // 保存到本地存储
         saveSessionsToLocalStorage();
@@ -724,11 +725,11 @@ const regenerateMessage = async (messageIndex: number) => {
   if (messageIndex < 0 || messageIndex >= messages.length) return;
 
   const aiMessage = messages[messageIndex];
-  if (aiMessage.role !== 'assistant') return;
+  if (!aiMessage || aiMessage.role !== 'assistant') return;
 
   // 找到对应的用户消息（通常是前一条）
   const userMessageIndex = messageIndex - 1;
-  if (userMessageIndex < 0 || messages[userMessageIndex].role !== 'user') return;
+  if (userMessageIndex < 0 || !messages[userMessageIndex] || messages[userMessageIndex].role !== 'user') return;
 
   // 删除当前的AI消息
   messages.splice(messageIndex, 1);
@@ -765,7 +766,7 @@ const regenerateMessage = async (messageIndex: number) => {
         // 更新消息内容
         if (currentSession.value && currentSession.value.messages.length > 0) {
           const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
-          if (lastMessage.role === 'assistant') {
+          if (lastMessage && lastMessage.role === 'assistant') {
             lastMessage.content = content;
             // 更新会话时间戳
             currentSession.value.updatedAt = formatDate(new Date());
@@ -782,7 +783,7 @@ const regenerateMessage = async (messageIndex: number) => {
         // 更新统计信息
         if (currentSession.value && currentSession.value.messages.length > 0) {
           const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
-          if (lastMessage.role === 'assistant') {
+          if (lastMessage && lastMessage.role === 'assistant') {
             lastMessage.stats = stats;
             // 保存到本地存储
             saveSessionsToLocalStorage();
@@ -801,7 +802,7 @@ const regenerateMessage = async (messageIndex: number) => {
       // 如果有部分内容，则保留并保存到本地存储
       if (currentSession.value && currentSession.value.messages.length > 0) {
         const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
-        if (lastMessage.role === 'assistant') {
+        if (lastMessage && lastMessage.role === 'assistant') {
           if (lastMessage.content === '') {
             // 内容为空，移除消息
             currentSession.value.messages.pop();
@@ -828,8 +829,8 @@ const regenerateMessage = async (messageIndex: number) => {
 
     // 如果AI消息已经创建但内容为空，更新为错误消息
     if (currentSession.value && currentSession.value.messages.length > 0) {
-      const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
-      if (lastMessage.role === 'assistant' && lastMessage.content === '') {
+        const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
+        if (lastMessage && lastMessage.role === 'assistant' && lastMessage.content === '') {
         lastMessage.content = `抱歉，AI服务暂时不可用。错误信息: ${errorMessage}`;
         // 保存到本地存储
         saveSessionsToLocalStorage();
@@ -849,11 +850,11 @@ watch(currentSessionId, () => {
 });
 
 // 监听选中的厂家和模型变化，更新当前会话的厂家和模型
-watch(() => [props.selectedProvider, props.currentModel], ([newProvider, newModel]) => {
-  if (currentSession.value) {
+watch(() => [props.selectedProvider, props.currentModel], (newValues) => {
+  if (currentSession.value && newValues[0] && newValues[1]) {
     // 更新当前会话的厂家和模型
-    currentSession.value.providerId = newProvider.id;
-    currentSession.value.modelId = newModel.id;
+    currentSession.value.providerId = newValues[0].id;
+    currentSession.value.modelId = newValues[1].id;
     currentSession.value.updatedAt = formatDate(new Date());
 
     // 保存到本地存储

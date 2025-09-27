@@ -17,6 +17,7 @@ export default defineNuxtConfig({
   ssr: false,
 
   modules: ['shadcn-nuxt', '@nuxtjs/color-mode', 'vue-sonner/nuxt'],
+
   colorMode: {
     classSuffix: ''
   },
