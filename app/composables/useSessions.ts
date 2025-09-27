@@ -176,10 +176,16 @@ const createSessionsStore = () => {
 
     const sessionIndex = sessions.value.findIndex(s => s.id === currentSessionId.value)
     if (sessionIndex !== -1) {
+      const session = sessions.value[sessionIndex]
+      // 确保会话对象存在
+      if (!session) {
+        return
+      }
+      
       // 创建新的会话对象以确保响应式更新
       const updatedSession = {
-        ...sessions.value[sessionIndex],
-        messages: [...sessions.value[sessionIndex].messages, message],
+        ...session,
+        messages: [...session.messages, message],
         updatedAt: formatDate(new Date())
       }
 
