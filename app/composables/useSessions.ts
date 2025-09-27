@@ -181,7 +181,7 @@ const createSessionsStore = () => {
       if (!session) {
         return
       }
-      
+
       // 创建新的会话对象以确保响应式更新
       const updatedSession = {
         ...session,
@@ -263,15 +263,11 @@ const createSessionsStore = () => {
    * @description 保存会话到本地存储
    */
   const saveSessionsToLocalStorage = (): void => {
-    try {
-      const data: StoredSessionsData = {
-        sessions: sessions.value,
-        currentSessionId: currentSessionId.value
-      }
-      localStorage.setItem('chat_sessions', JSON.stringify(data))
-    } catch (error) {
-      // 可以添加 fallback 机制，比如使用 sessionStorage 或其他存储方式
+    const data: StoredSessionsData = {
+      sessions: sessions.value,
+      currentSessionId: currentSessionId.value
     }
+    localStorage.setItem('chat_sessions', JSON.stringify(data))
   }
 
   /**
@@ -279,8 +275,8 @@ const createSessionsStore = () => {
    * @returns {string} 唯一ID
    */
   const generateId = (): string => {
-    const randomPart = Math.random().toString(36).substring(2, 14);
-    return `session-id-${randomPart}`;
+    const randomPart = Math.random().toString(36).substring(2, 14)
+    return `session-id-${randomPart}`
   }
 
   // 初始化时从本地存储加载会话（仅在客户端执行）
