@@ -37,7 +37,7 @@
         <Select v-model="selectedModel">
           <SelectTrigger class="pointer-cursor relative flex items-center justify-between rounded-md border hover:bg-gray-200/50 dark:hover:bg-gray-200/20 border-black/10 bg-white py-2 pl-3 pr-3 text-left focus:outline-none focus:ring-0 focus:ring-offset-0 dark:border-gray-700 dark:bg-black sm:text-sm radix-state-open:bg-gray-50 dark:radix-state-open:bg-gray-700">
             <span class="flex h-6 items-center gap-1 text-gray-800 dark:text-gray-200 text-xs min-w-[75px] font-normal">
-              {{ currentModel.name }}
+              {{ currentModel?.name }}
             </span>
           </SelectTrigger>
           <SelectContent>
@@ -148,7 +148,7 @@
                   <img :src="provider.icon" :alt="provider.name" class="h-4 w-4 dark:filter dark:invert" />
                   <span>{{ provider.name }}</span>
                 </div>
-                <Switch v-model="providerSettings[provider.id].useCustomApi" @update:model-value="initProviderSettings(provider.id)" />
+                <Switch v-model="providerSettings[provider.id]?.useCustomApi" @update:model-value="initProviderSettings(provider.id)" />
               </div>
 
               <!-- 自定义API设置（当SWITCH开启时显示） -->
@@ -156,13 +156,13 @@
                 <!-- API Base URL 设置 -->
                 <div class="space-y-2">
                   <Label class="text-sm text-muted-foreground">API Base URL</Label>
-                  <Input v-model="providerSettings[provider.id].apiBaseUrl" :placeholder="getDefaultApiBaseUrl(provider.id)" class="w-full text-sm px-2 py-1 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white" />
+                  <Input v-model="providerSettings[provider.id]?.apiBaseUrl" :placeholder="getDefaultApiBaseUrl(provider.id)" class="w-full text-sm px-2 py-1 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white" />
                 </div>
 
                 <!-- API KEY 设置 -->
                 <div class="space-y-2">
                   <Label class="text-sm text-muted-foreground">API KEY</Label>
-                  <Input v-model="providerSettings[provider.id].apiKey" type="password" placeholder="输入您的API密钥" class="w-full text-sm px-2 py-1 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white" />
+                  <Input v-model="providerSettings[provider.id]?.apiKey" type="password" placeholder="输入您的API密钥" class="w-full text-sm px-2 py-1 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white" />
                 </div>
               </div>
             </div>
@@ -388,16 +388,16 @@
       const model = provider.models.find(m => m.id === currentSession.modelId);
       if (model) {
         selectedModel.value = model.id;
-      } else if (provider.models.length > 0) {
-        // 如果找不到对应的模型，使用该厂家的第一个模型
-        selectedModel.value = provider.models[0].id;
-      }
+    } else if (provider.models.length > 0 && provider.models[0]) {
+      // 如果找不到对应的模型，使用该厂家的第一个模型
+      selectedModel.value = provider.models[0].id;
+    }
     }
   };
 
   // 监听厂家选择变化，更新模型列表
   watch(selectedProvider, (newProvider) => {
-    if (newProvider.models.length > 0) {
+    if (newProvider.models.length > 0 && newProvider.models[0]) {
       selectedModel.value = newProvider.models[0].id;
     }
   });
@@ -473,7 +473,8 @@
    * @description 获取当前选中的模型对象
    */
   const currentModel = computed(() => {
-    return selectedProvider.value.models.find(model => model.id === selectedModel.value) || selectedProvider.value.models[0];
+    const foundModel = selectedProvider.value.models.find(model => model.id === selectedModel.value);
+    return foundModel || (selectedProvider.value.models[0] ? selectedProvider.value.models[0] : undefined);
   });
 
   /**
