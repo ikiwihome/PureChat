@@ -278,8 +278,13 @@
   // 会话管理
   const sessions = useSessions();
 
-  // 当前选中的厂家
-  const selectedProvider = ref<Provider>(providers.value[0]);
+  // 当前选中的厂家（确保有默认值）
+  const selectedProvider = ref<Provider>(providers.value[0] || {
+    id: '',
+    name: '',
+    icon: '',
+    models: []
+  });
 
   // 当前选中的模型
   const selectedModel = ref<string>(selectedProvider.value.models[0]?.id || '');
@@ -388,10 +393,10 @@
       const model = provider.models.find(m => m.id === currentSession.modelId);
       if (model) {
         selectedModel.value = model.id;
-    } else if (provider.models.length > 0 && provider.models[0]) {
-      // 如果找不到对应的模型，使用该厂家的第一个模型
-      selectedModel.value = provider.models[0].id;
-    }
+      } else if (provider.models.length > 0 && provider.models[0]) {
+        // 如果找不到对应的模型，使用该厂家的第一个模型
+        selectedModel.value = provider.models[0].id;
+      }
     }
   };
 
@@ -474,7 +479,15 @@
    */
   const currentModel = computed(() => {
     const foundModel = selectedProvider.value.models.find(model => model.id === selectedModel.value);
-    return foundModel || (selectedProvider.value.models[0] ? selectedProvider.value.models[0] : undefined);
+    return foundModel || selectedProvider.value.models[0] || {
+      id: '',
+      name: '未选择模型',
+      pricing: {
+        input: 0,
+        cachedInput: 0,
+        output: 0
+      }
+    };
   });
 
   /**
