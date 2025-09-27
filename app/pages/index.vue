@@ -37,7 +37,7 @@
         <Select v-model="selectedModel">
           <SelectTrigger class="pointer-cursor relative flex items-center justify-between rounded-md border hover:bg-gray-200/50 dark:hover:bg-gray-200/20 border-black/10 bg-white py-2 pl-3 pr-3 text-left focus:outline-none focus:ring-0 focus:ring-offset-0 dark:border-gray-700 dark:bg-black sm:text-sm radix-state-open:bg-gray-50 dark:radix-state-open:bg-gray-700">
             <span class="flex h-6 items-center gap-1 text-gray-800 dark:text-gray-200 text-xs min-w-[75px] font-normal">
-              {{ currentModel?.name }}
+              {{ currentModel.name }}
             </span>
           </SelectTrigger>
           <SelectContent>
