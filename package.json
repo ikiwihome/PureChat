@@ -19,8 +19,8 @@
   "author": "ikiwi <ikiwicc@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "build": "nuxt build",
     "dev": "nuxt dev",
+    "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
@@ -32,12 +32,11 @@
     "@vueuse/core": "^13.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "docx": "^9.5.1",
     "embla-carousel-vue": "^8.6.0",
-    "lucide-vue-next": "^0.541.0",
+    "lucide-vue-next": "^0.542.0",
     "marked": "^16.3.0",
-    "nuxt": "^3.19.2",
-    "openai": "^5.23.0",
+    "nuxt": "^4.1.2",
+    "openai": "^5.23.1",
     "reka-ui": "^2.5.1",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.13",
@@ -62,5 +61,5 @@
     "typescript": "^5.9.2",
     "vue-router": "^4.5.1"
   },
-  "packageManager": "pnpm@10.15.0"
+  "packageManager": "pnpm@10.17.1"
 }

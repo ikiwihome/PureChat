@@ -225,7 +225,7 @@ cp .env.example .env
 
 ```
 PureChat/
-├── src/                    # 源代码目录
+├── app/                    # 源代码目录
 │   ├── components/         # Vue组件
 │   │   ├── ui/            # shadcn/ui基础组件
 │   │   ├── AppSidebar.vue # 侧边栏会话管理
