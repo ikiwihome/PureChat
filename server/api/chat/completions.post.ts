@@ -125,7 +125,7 @@ export default defineEventHandler(async (event) => {
  * @param provider 服务提供商
  * @param customApiConfig 自定义API配置
  */
-function getApiConfig (provider: string, customApiConfig: CustomApiConfig = {}): ApiConfig {
+function getApiConfig(provider: string, customApiConfig: CustomApiConfig = {}): ApiConfig {
   // 统一的OPENAI兼容API配置 - 直接从环境变量读取
   const defaultApiConfig = {
     apiKey: process.env.DEFAULT_API_KEY || '',
@@ -139,7 +139,7 @@ function getApiConfig (provider: string, customApiConfig: CustomApiConfig = {}):
       throw createError({
         statusCode: 400,
         statusMessage: 'Bad Request',
-        message: `Custom API key not provided for provider: ${provider}`
+        message: 'Custom API key not provided for provider: ${provider}'
       })
     }
 
@@ -166,7 +166,7 @@ function getApiConfig (provider: string, customApiConfig: CustomApiConfig = {}):
  * 适用于所有支持OpenAI格式的厂商（OpenAI、DeepSeek、xAI、Anthropic、Google等）
  * 所有厂商都使用统一的BaseURL和APIKEY格式
  */
-async function callOpenAICompatible (apiConfig: ApiConfig, requestData: RequestData) {
+async function callOpenAICompatible(apiConfig: ApiConfig, requestData: RequestData) {
   const { apiKey, baseUrl } = apiConfig
   const stream = requestData.stream || false
 
@@ -181,42 +181,42 @@ async function callOpenAICompatible (apiConfig: ApiConfig, requestData: RequestD
   let accumulatedContent = '' // 用于累积AI回复内容以计算token
 
   // 计算输入消息的token数量
-  const calculatePromptTokens = (messages: Array<{content: string}>): number => {
+  const calculatePromptTokens = (messages: Array<{ content: string }>): number => {
     if (!messages || !Array.isArray(messages)) return 0
-    
+
     // 简单的token估算方法：对于中文，大约1个汉字=1.5个token
     // 对于英文，大约1个单词=1.3个token
     // 这里使用更简单的基于字符数的估算：大约4个字符=1个token
     let totalTokens = 0
-    
+
     for (const message of messages) {
       if (message.content) {
         const text = message.content
         const chineseCharCount = (text.match(/[\u4e00-\u9fa5]/g) || []).length
         const englishCharCount = text.length - chineseCharCount
-        
+
         // 中文按1.5个token/字符，英文按0.25个token/字符（4个字符=1个token）
         totalTokens += Math.round(chineseCharCount * 1.5 + englishCharCount * 0.25)
       }
     }
-    
+
     return totalTokens
   }
 
   // 计算回复内容的token数量
   const calculateCompletionTokens = (content: string): number => {
     if (!content) return 0
-    
+
     const chineseCharCount = (content.match(/[\u4e00-\u9fa5]/g) || []).length
     const englishCharCount = content.length - chineseCharCount
-    
+
     // 中文按1.5个token/字符，英文按0.25个token/字符（4个字符=1个token）
     return Math.round(chineseCharCount * 1.5 + englishCharCount * 0.25)
   }
 
   // 创建 AbortController 用于中断请求
   const abortController = new AbortController()
-  
+
   // 如果是流式请求，注册控制器以便可以被停止
   if (stream) {
     registerStreamController(abortController)
@@ -248,7 +248,7 @@ async function callOpenAICompatible (apiConfig: ApiConfig, requestData: RequestD
 
     // 创建转换流来处理和增强流式响应
     const transformStream = new TransformStream({
-      async transform (chunk, controller) {
+      async transform(chunk, controller) {
         // 检查是否已被中断
         if (abortController.signal.aborted) {
           controller.terminate()
@@ -276,7 +276,7 @@ async function callOpenAICompatible (apiConfig: ApiConfig, requestData: RequestD
                 promptTokens = calculatePromptTokens(requestData.messages)
                 completionTokens = calculateCompletionTokens(accumulatedContent)
                 cachedTokens = 0 // 缓存token始终为0
-                
+
                 // 创建包含usage和stats的数据块
                 const usageData = {
                   usage: {
@@ -292,11 +292,11 @@ async function callOpenAICompatible (apiConfig: ApiConfig, requestData: RequestD
                     totalTime: Date.now() - requestStartTime
                   }
                 }
-                
+
                 // 发送包含usage和stats的数据块
                 controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(usageData)}\n`))
               }
-              
+
               controller.enqueue(new TextEncoder().encode(`${line}\n`))
               continue
             }
@@ -324,7 +324,7 @@ async function callOpenAICompatible (apiConfig: ApiConfig, requestData: RequestD
               // 检查是否包含usage数据且不为null，如果是则在这个数据块中追加stats信息
               if (parsed.usage !== null && parsed.usage !== undefined) {
                 hasReceivedUsage = true // 标记已收到有效的usage数据
-                
+
                 // 在当前数据块中追加stats信息
                 parsed.stats = {
                   firstTokenTime: firstTokenTime,
@@ -341,7 +341,7 @@ async function callOpenAICompatible (apiConfig: ApiConfig, requestData: RequestD
                 controller.enqueue(new TextEncoder().encode(`${line}\n`))
               }
 
-    } catch {
+            } catch {
               // JSON解析失败，保持原样输出
               controller.enqueue(new TextEncoder().encode(`${line}\n`))
             }

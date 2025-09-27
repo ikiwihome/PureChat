@@ -308,8 +308,8 @@
     // 在移动设备上，选择会话后自动收起侧边栏
     if (isMobile.value) {
       setOpenMobile(false);
-  }
-};
+    }
+  };
 </script>
 
 <style scoped>

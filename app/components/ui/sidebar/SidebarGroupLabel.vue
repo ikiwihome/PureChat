@@ -20,6 +20,6 @@ const props = defineProps<PrimitiveProps & {
       'group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0',
       props.class)"
   >
-    <slot ></slot>
+    <slot />
   </Primitive>
 </template>

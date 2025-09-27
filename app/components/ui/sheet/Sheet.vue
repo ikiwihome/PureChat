@@ -13,6 +13,6 @@ const forwarded = useForwardPropsEmits(props, emits)
     data-slot="sheet"
     v-bind="forwarded"
   >
-    <slot ></slot>
+    <slot />
   </DialogRoot>
 </template>

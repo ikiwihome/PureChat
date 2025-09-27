@@ -76,7 +76,7 @@ provideSidebarContext({
       :class="cn('group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full', props.class)"
       v-bind="$attrs"
     >
-      <slot ></slot>
+      <slot />
     </div>
   </TooltipProvider>
 </template>

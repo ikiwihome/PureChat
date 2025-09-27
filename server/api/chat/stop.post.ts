@@ -10,9 +10,9 @@ let activeStreamControllers: Set<AbortController> = new Set()
  * 注册活跃的流式响应控制器
  * @param controller - AbortController实例
  */
-export function registerStreamController (controller: AbortController) {
+export function registerStreamController(controller: AbortController) {
   activeStreamControllers.add(controller)
-  
+
   // 当控制器被中止时，从集合中移除
   controller.signal.addEventListener('abort', () => {
     activeStreamControllers.delete(controller)
@@ -22,7 +22,7 @@ export function registerStreamController (controller: AbortController) {
 /**
  * 停止所有活跃的流式响应
  */
-export function stopAllActiveStreams () {
+export function stopAllActiveStreams() {
   for (const controller of activeStreamControllers) {
     try {
       controller.abort()
