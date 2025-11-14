@@ -106,7 +106,7 @@
       "icon": "/meta.svg",
       "models": [
         {
-          "id": "deepseek-v3.1",
+          "id": "llama-3.1-8b-instruct",
           "name": "Llama-3.1-8B-Instruct",
           "pricing": {
             "input": 0.27,
@@ -146,6 +146,22 @@
             "input": 0.30,
             "cachedInput": 0.075,
             "output": 0.50
+          }
+        }
+      ]
+    },
+    {
+      "id": "minimax",
+      "name": "MiniMax",
+      "icon": "/minimax.svg",
+      "models": [
+        {
+          "id": "MiniMax M2",
+          "name": "MiniMax-M2",
+          "pricing": {
+            "input": 0.30,
+            "cachedInput": 0.03,
+            "output": 1.18
           }
         }
       ]
