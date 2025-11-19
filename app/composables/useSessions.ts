@@ -112,8 +112,8 @@ const createSessionsStore = () => {
       messages: [],
       createdAt: formatDate(now),
       updatedAt: formatDate(now),
-      providerId: 'meta', // 默认厂家：DeepSeek
-      modelId: 'deepseek-v3.1' // 默认模型：deepseek-chat
+      providerId: 'DeepSeek', // 默认厂家：DeepSeek
+      modelId: 'deepseek-chat' // 默认模型：deepseek-chat
     }
 
     // 使用响应式方式更新数组，确保触发重新渲染

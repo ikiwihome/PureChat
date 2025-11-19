@@ -3,11 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 import pkg from './package.json';
 
 export default defineNuxtConfig({
-  devServer: {
-    host: '0.0.0.0',
-    port: 8001
-  },
-  compatibilityDate: '2025-09-06',
+  compatibilityDate: '2025-07-15',
   devtools: { enabled: false },
   css: ['./app/assets/css/tailwind.css'],
 
