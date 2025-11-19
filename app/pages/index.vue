@@ -450,7 +450,8 @@
       anthropic: 'https://api.anthropic.com/v1',
       google: 'https://generativelanguage.googleapis.com/v1',
       deepseek: 'https://api.deepseek.com/v1',
-      xai: 'https://api.x.ai/v1'
+      xai: 'https://api.x.ai/v1',
+      minimax: 'https://api.minimaxi.com/v1'
     };
     return defaultUrls[providerId] || 'https://api.openai.com/v1';
   };
