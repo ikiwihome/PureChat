@@ -1,5 +1,6 @@
 {
   "name": "purechat",
+  "title": "空灵智语AI",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -33,7 +34,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "embla-carousel-vue": "^8.6.0",
-    "lucide-vue-next": "^0.555.0",
+    "lucide-vue-next": "^0.556.0",
     "marked": "^17.0.0",
     "nuxt": "^4.2.1",
     "openai": "^6.9.1",
@@ -58,7 +59,7 @@
     "@tauri-apps/cli": "2.9.5",
     "@types/node": "^24.10.1",
     "class-variance-authority": "^0.7.1",
-    "shadcn-nuxt": "2.4.1",
+    "shadcn-nuxt": "2.4.2",
     "typescript": "^5.9.3",
     "vue-router": "^4.6.3"
   },
