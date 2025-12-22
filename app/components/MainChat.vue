@@ -66,7 +66,7 @@
         'w-full max-w-full rounded-sm px-4 py-3 mx-2 md:mx-4 lg:mx-8',
         'bg-gray-200/20 dark:bg-gray-800/20 text-gray-800 dark:text-gray-200'
       ]">
-        <div class="break-all break-words overflow-wrap-anywhere markdown-content" v-html="renderMarkdown(message.content)">
+        <div class="break-all wrap-break-word overflow-wrap-anywhere markdown-content" v-html="renderMarkdown(message.content)">
         </div>
       </div>
 
@@ -75,7 +75,7 @@
         'w-full max-w-full rounded-sm px-4 py-3 mx-2 md:mx-4 lg:mx-8',
         'bg-gray-200/50 dark:bg-gray-600/20 text-gray-800 dark:text-gray-200'
       ]">
-        <div class="break-all break-words overflow-wrap-anywhere">{{ message.content }}</div>
+        <div class="break-all wrap-break-word overflow-wrap-anywhere">{{ message.content }}</div>
       </div>
 
       <!-- 消息操作区域 - 放在消息框外部下方，仅在消息有内容时显示 -->
@@ -138,7 +138,7 @@
   <div class="border-t border-gray-200 dark:border-gray-800 p-4 lg:p-4 bg-white dark:bg-gray-950 sticky bottom-0 z-10">
     <form @submit.prevent="handleSendMessage">
       <div class="flex-1 relative overflow-hidden">
-        <textarea ref="inputRef" v-model="inputMessage" placeholder="输入您的问题..." class="min-h-[40px] max-h-[200px] resize-none pl-8 pr-10 sm:pr-12 py-[10px] break-all break-words overflow-wrap-anywhere border-2 placeholder:text-muted-foreground focus-visible:ring-0 focus:outline-none focus:ring-0 focus:ring-opacity-0 focus:ring-offset-0 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 flex field-sizing-content w-full rounded-2xl bg-transparent outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-md" :disabled="isLoading" @keydown="handleKeydown"></textarea>
+        <textarea ref="inputRef" v-model="inputMessage" placeholder="输入您的问题..." class="min-h-10 max-h-50 resize-none pl-8 pr-10 sm:pr-12 py-2.5 break-all wrap-break-word overflow-wrap-anywhere border-2 placeholder:text-muted-foreground focus-visible:ring-0 focus:outline-none focus:ring-0 focus:ring-opacity-0 focus:ring-offset-0 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 flex field-sizing-content w-full rounded-2xl bg-transparent outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-md" :disabled="isLoading" @keydown="handleKeydown"></textarea>
         <Button type="submit" size="icon" class="absolute right-4 bottom-2 h-8 w-8 transition-colors" :disabled="!inputMessage.trim() && !isLoading" @mouseenter="isHoveringSubmitButton = true" @mouseleave="isHoveringSubmitButton = false" @click="isLoading && isHoveringSubmitButton ? stopGeneration() : undefined">
           <!-- 正常状态：发送图标 -->
           <svg v-if="!isLoading" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">

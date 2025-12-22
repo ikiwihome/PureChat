@@ -36,7 +36,7 @@
         <!-- 模型选择下拉菜单 -->
         <Select v-model="selectedModel">
           <SelectTrigger class="pointer-cursor relative flex items-center justify-between rounded-md border hover:bg-gray-200/50 dark:hover:bg-gray-200/20 border-black/10 bg-white py-2 pl-3 pr-3 text-left focus:outline-none focus:ring-0 focus:ring-offset-0 dark:border-gray-700 dark:bg-black sm:text-sm radix-state-open:bg-gray-50 dark:radix-state-open:bg-gray-700">
-            <span class="flex h-6 items-center gap-1 text-gray-800 dark:text-gray-200 text-xs min-w-[75px] font-normal">
+            <span class="flex h-6 items-center gap-1 text-gray-800 dark:text-gray-200 text-xs min-w-18.75 font-normal">
               {{ currentModel.name }}
             </span>
           </SelectTrigger>
@@ -44,7 +44,7 @@
             <SelectGroup>
               <SelectItem v-for="model in currentProviderModels" :key="model.id" :value="model.id">
                 <span class="inline-flex w-full">
-                  <span class="flex h-6 items-center gap-1 text-gray-800 dark:text-white text-xs min-w-[75px] font-normal">
+                  <span class="flex h-6 items-center gap-1 text-gray-800 dark:text-white text-xs min-w-18.75 font-normal">
                     {{ model.name }}
                   </span>
                 </span>
@@ -262,6 +262,9 @@
 
   // 导入 slider 组件
   import { Slider } from '~/components/ui/slider'
+
+  // 导入 textarea 组件
+  import { Textarea } from '~/components/ui/textarea'
 
   // useColorMode 由 Nuxt 自动注入，无需手动导入
   const colorMode = useColorMode();
