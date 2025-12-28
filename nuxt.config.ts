@@ -12,6 +12,13 @@ export default defineNuxtConfig({
   // 如果您希望利用Nuxt的SSR能力，请注释掉 ssr: false
   ssr: false,
 
+  // 运行时配置 - 用于服务器端API
+  runtimeConfig: {
+    // 服务器端可用的私有配置
+    defaultApiKey: process.env.DEFAULT_API_KEY || '',
+    defaultBaseUrl: process.env.DEFAULT_BASE_URL || 'https://openrouter.ai/api/v1',
+  },
+
   modules: ['shadcn-nuxt', '@nuxtjs/color-mode', 'vue-sonner/nuxt'],
 
   colorMode: {

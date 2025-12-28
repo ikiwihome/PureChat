@@ -63,20 +63,6 @@
               <circle cx="12" cy="12" r="3" />
             </svg>
           </Button>
-        <!-- 费用说明图标按钮，在移动端隐藏 -->
-        <Button variant="ghost" size="icon" @click="showPricingSheet = true" class="no-hover hidden sm:flex">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
-              <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-              <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-              <g id="SVGRepo_iconCarrier">
-                <circle cx="12" cy="12" r="10" stroke-width="1.5"></circle>
-                <path d="M12 6V18" stroke-width="1.5" stroke-linecap="round"></path>
-                <path
-                  d="M15 9.5C15 8.11929 13.6569 7 12 7C10.3431 7 9 8.11929 9 9.5C9 10.8807 10.3431 12 12 12C13.6569 12 15 13.1193 15 14.5C15 15.8807 13.6569 17 12 17C10.3431 17 9 15.8807 9 14.5"
-                  stroke-width="1.5" stroke-linecap="round"></path>
-              </g>
-            </svg>
-          </Button>
         <!-- 根据当前颜色模式显示太阳或月亮图标 -->
         <Button variant="ghost" size="icon" @click="toggleDarkMode" class="no-hover">
             <Sun v-if="colorMode.value === 'light'" class="h-5 w-5" />
@@ -90,41 +76,6 @@
     </div>
   </SidebarInset>
 
-  <!-- 价格说明弹窗 -->
-  <Sheet :open="showPricingSheet" @update:open="showPricingSheet = $event">
-    <SheetContent side="right" class="sm:max-w-md px-5">
-      <SheetHeader>
-        <SheetTitle>模型价格说明</SheetTitle>
-        <SheetDescription>
-          所有模型的价格信息（单位：美元/百万tokens）
-        </SheetDescription>
-      </SheetHeader>
-      <ScrollArea class="h-[calc(100vh-8rem)]">
-        <div class="space-y-2 px-2">
-          <div v-for="provider in providers" :key="provider.id" class="border-b border-gray-200 dark:border-gray-700 py-4 last:border-b-0">
-            <h3 class="font-semibold text-lg mb-2 flex items-center gap-2">
-              <img :src="provider.icon" :alt="provider.name" class="h-5 w-5 dark:filter dark:invert" />
-              {{ provider.name }}
-            </h3>
-            <div class="space-y-2">
-              <div v-for="model in provider.models" :key="model.id" class="pb-2">
-                <h4 class="font-medium text-sm mb-2">{{ model.name }}</h4>
-                <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
-                  <div class="text-muted-foreground">输入价格(缓存未命中):</div>
-                  <div class="text-right">${{ model.pricing.input }}</div>
-                  <div class="text-muted-foreground">输入价格(缓存命中):</div>
-                  <div class="text-right">${{ model.pricing.cachedInput }}</div>
-                  <div class="text-muted-foreground">输出价格:</div>
-                  <div class="text-right">${{ model.pricing.output }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </ScrollArea>
-    </SheetContent>
-  </Sheet>
-
   <!-- 设置弹窗 -->
   <Sheet :open="showSettingsSheet" @update:open="showSettingsSheet = $event">
     <SheetContent side="right" class="sm:max-w-md px-5">
@@ -136,33 +87,42 @@
       </SheetHeader>
       <ScrollArea class="h-[calc(100vh-8rem)]">
         <div class="px-4 space-y-6">
-          <!-- 模型厂家自定义API设置 -->
+          <!-- OpenAI API 设置 -->
           <div class="space-y-4">
             <div class="flex justify-between items-center">
-              <Label class="font-medium">模型自定义设置</Label>
+              <Label class="font-medium">OpenAI API 设置</Label>
+              <Switch v-model="useCustomApi" />
             </div>
-            <div v-for="provider in providers" :key="provider.id" class="space-y-3 border-b border-gray-200 dark:border-gray-700 pb-4 last:border-b-0">
-              <!-- 厂家名称和SWITCH开关 -->
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <img :src="provider.icon" :alt="provider.name" class="h-4 w-4 dark:filter dark:invert" />
-                  <span>{{ provider.name }}</span>
-                </div>
-                <Switch :model-value="providerSettings[provider.id]?.useCustomApi" @update:model-value="updateProviderSetting(provider.id, 'useCustomApi', $event)" />
+
+            <!-- 自定义API设置（当SWITCH开启时显示） -->
+            <div v-if="useCustomApi" class="space-y-3">
+              <!-- API Base URL 设置 -->
+              <div class="space-y-2">
+                <Label class="text-sm text-muted-foreground">API Base URL</Label>
+                <Input v-model="apiBaseUrl" placeholder="https://openrouter.ai/api/v1" class="w-full text-sm px-2 py-1 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white" />
               </div>
 
-              <!-- 自定义API设置（当SWITCH开启时显示） -->
-              <div v-if="providerSettings[provider.id]?.useCustomApi" class="pl-6 space-y-3">
-                <!-- API Base URL 设置 -->
-                <div class="space-y-2">
-                  <Label class="text-sm text-muted-foreground">API Base URL</Label>
-                  <Input :model-value="providerSettings[provider.id]?.apiBaseUrl" @update:model-value="updateProviderSetting(provider.id, 'apiBaseUrl', $event)" :placeholder="getDefaultApiBaseUrl(provider.id)" class="w-full text-sm px-2 py-1 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white" />
-                </div>
+              <!-- API KEY 设置 -->
+              <div class="space-y-2">
+                <Label class="text-sm text-muted-foreground">API KEY</Label>
+                <Input v-model="apiKey" type="password" placeholder="输入您的 OpenAI API 密钥" class="w-full text-sm px-2 py-1 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white" />
+              </div>
 
-                <!-- API KEY 设置 -->
-                <div class="space-y-2">
-                  <Label class="text-sm text-muted-foreground">API KEY</Label>
-                  <Input :model-value="providerSettings[provider.id]?.apiKey" @update:model-value="updateProviderSetting(provider.id, 'apiKey', $event)" type="password" placeholder="输入您的API密钥" class="w-full text-sm px-2 py-1 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-200/10 dark:text-white" />
+              <!-- API 测试按钮和状态 -->
+              <div class="space-y-2">
+                <Button @click="testApi" :disabled="isTestingApi || !apiBaseUrl || !apiKey" variant="outline" class="w-full">
+                  <span v-if="!isTestingApi">测试 API</span>
+                  <span v-else class="flex items-center gap-2">
+                    <div class="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"></div>
+                    测试中...
+                  </span>
+                </Button>
+                <!-- 测试结果显示 -->
+                <div v-if="apiTestResult" :class="[
+                  'text-sm p-2 rounded-md',
+                  apiTestResult.success ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                ]">
+                  {{ apiTestResult.message }}
                 </div>
               </div>
             </div>
@@ -269,14 +229,43 @@
   // useColorMode 由 Nuxt 自动注入，无需手动导入
   const colorMode = useColorMode();
 
-  // 导入模型数据
-  import modelData from '~/data/models.json';
-
   // 导入会话管理和类型定义
   import { useSessions, type Provider } from '~/composables/useSessions';
+  import { useModels } from '~/composables/useModels';
 
   // 厂家列表
-  const providers = ref<Provider[]>(modelData.providers);
+  const { providers, loadModels } = useModels();
+
+  // 自动获取在线模型数据
+  onMounted(async () => {
+    // 保存当前选择的厂家和模型ID
+    const currentProviderId = selectedProvider.value.id;
+    const currentModelId = selectedModel.value;
+
+    await loadModels();
+    
+    // 尝试恢复之前选择的厂家和模型
+    const provider = providers.value.find(p => p.id === currentProviderId);
+    if (provider) {
+      selectedProvider.value = provider;
+      
+      // 检查之前选择的模型是否还存在
+      const model = provider.models.find(m => m.id === currentModelId);
+      if (model) {
+        selectedModel.value = model.id;
+      } else if (provider.models.length > 0 && provider.models[0]) {
+        // 如果之前的模型不存在了，使用该厂家的第一个模型
+        selectedModel.value = provider.models[0].id;
+      }
+    } else {
+      // 如果当前选中的厂家不在新列表中，重置选中项
+      const firstProvider = providers.value[0];
+      if (firstProvider) {
+        selectedProvider.value = firstProvider;
+        selectedModel.value = firstProvider.models[0]?.id || '';
+      }
+    }
+  });
 
   // 会话管理
   const sessions = useSessions();
@@ -292,8 +281,8 @@
   // 当前选中的模型
   const selectedModel = ref<string>(selectedProvider.value.models[0]?.id || '');
 
-  // 控制价格说明弹窗显示状态
-  const showPricingSheet = ref(false);
+  // 标志位：是否正在加载会话模型信息（防止watch触发时覆盖）
+  const isLoadingSessionModel = ref(false);
 
   // 控制设置弹窗显示状态
   const showSettingsSheet = ref(false);
@@ -302,12 +291,14 @@
   const temperature = ref([0.3]);
   const systemPrompt = ref('你是一个超级智能的AI大模型，擅长准确理解用户意图，回答用户问题');
 
-  // 厂家自定义API设置
-  const providerSettings = ref<Record<string, {
-    useCustomApi: boolean;
-    apiBaseUrl: string;
-    apiKey: string;
-  }>>({});
+  // OpenAI API 设置
+  const useCustomApi = ref(false);
+  const apiBaseUrl = ref('');
+  const apiKey = ref('');
+
+  // API 测试相关状态
+  const isTestingApi = ref(false);
+  const apiTestResult = ref<{ success: boolean; message: string } | null>(null);
 
   // 从本地存储加载设置
   const loadSettingsFromLocalStorage = () => {
@@ -323,7 +314,9 @@
               : [settings.temperature];
           }
           if (settings.systemPrompt) systemPrompt.value = settings.systemPrompt;
-          if (settings.providerSettings) providerSettings.value = settings.providerSettings;
+          if (settings.useCustomApi !== undefined) useCustomApi.value = settings.useCustomApi;
+          if (settings.apiBaseUrl !== undefined) apiBaseUrl.value = settings.apiBaseUrl;
+          if (settings.apiKey !== undefined) apiKey.value = settings.apiKey;
         }
       } catch (error) {
         console.error('Failed to load settings from localStorage:', error);
@@ -353,21 +346,6 @@
     loadSettingsFromLocalStorage();
     loadThemePreference();
     loadSessionModelInfo();
-
-    // 初始化所有厂家的设置
-    providers.value.forEach(provider => {
-      initProviderSettings(provider.id);
-    });
-  });
-
-  // 监听设置弹窗打开，确保所有厂家设置都已初始化
-  watch(showSettingsSheet, (isOpen) => {
-    if (isOpen) {
-      // 确保所有厂家的设置都已初始化
-      providers.value.forEach(provider => {
-        initProviderSettings(provider.id);
-      });
-    }
   });
 
   // 监听当前会话变化，同步模型信息
@@ -387,6 +365,9 @@
 
     const currentSession = sessions.currentSession.value;
 
+    // 设置标志位，防止 watch 触发
+    isLoadingSessionModel.value = true;
+
     // 根据会话中的 providerId 查找对应的厂家
     const provider = providers.value.find(p => p.id === currentSession.providerId);
     if (provider) {
@@ -401,10 +382,20 @@
         selectedModel.value = provider.models[0].id;
       }
     }
+
+    // 重置标志位
+    nextTick(() => {
+      isLoadingSessionModel.value = false;
+    });
   };
 
   // 监听厂家选择变化，更新模型列表
   watch(selectedProvider, (newProvider) => {
+    // 如果正在加载会话模型信息，跳过自动更新
+    if (isLoadingSessionModel.value) {
+      return;
+    }
+
     if (newProvider.models.length > 0 && newProvider.models[0]) {
       selectedModel.value = newProvider.models[0].id;
     }
@@ -412,52 +403,6 @@
 
   // 导入 toast 用于显示提示消息
   import { toast } from 'vue-sonner';
-
-  /**
-   * @description 初始化厂家设置
-   * @param {string} providerId - 厂家ID
-   */
-  const initProviderSettings = (providerId: string) => {
-    if (!providerSettings.value[providerId]) {
-      providerSettings.value[providerId] = {
-        useCustomApi: false,
-        apiBaseUrl: getDefaultApiBaseUrl(providerId),
-        apiKey: ''
-      };
-    }
-  };
-
-  /**
-   * @description 更新厂家设置
-   * @param {string} providerId - 厂家ID
-   * @param {string} key - 设置键名
-   * @param {any} value - 设置值
-   */
-  const updateProviderSetting = (providerId: string, key: 'useCustomApi' | 'apiBaseUrl' | 'apiKey', value: any) => {
-    initProviderSettings(providerId);
-    const setting = providerSettings.value[providerId];
-    if (setting) {
-      // 使用类型断言来解决TypeScript类型检查问题
-      (setting as any)[key] = value;
-    }
-  };
-
-  /**
-   * @description 获取默认的API Base URL
-   * @param {string} providerId - 厂家ID
-   * @returns {string} 默认的API Base URL
-   */
-  const getDefaultApiBaseUrl = (providerId: string): string => {
-    const defaultUrls: Record<string, string> = {
-      openai: 'https://api.openai.com/v1',
-      anthropic: 'https://api.anthropic.com/v1',
-      google: 'https://generativelanguage.googleapis.com/v1',
-      deepseek: 'https://api.deepseek.com/v1',
-      xai: 'https://api.x.ai/v1',
-      minimax: 'https://api.minimaxi.com/v1'
-    };
-    return defaultUrls[providerId] || 'https://api.openai.com/v1';
-  };
 
   /**
    * @description 保存设置到本地存储
@@ -469,7 +414,9 @@
         const settings = {
           temperature: temperature.value,
           systemPrompt: systemPrompt.value,
-          providerSettings: providerSettings.value
+          useCustomApi: useCustomApi.value,
+          apiBaseUrl: apiBaseUrl.value,
+          apiKey: apiKey.value
         };
 
         // 保存到本地存储
@@ -540,6 +487,73 @@
       } catch (error) {
         console.error('Failed to save theme preference to localStorage:', error);
       }
+    }
+  };
+
+  /**
+   * @description 测试自定义API连接
+   */
+  const testApi = async () => {
+    // 清除之前的测试结果
+    apiTestResult.value = null;
+
+    // 验证必填字段
+    if (!apiBaseUrl.value || !apiKey.value) {
+      apiTestResult.value = {
+        success: false,
+        message: '请填写完整的 API Base URL 和 API KEY'
+      };
+      return;
+    }
+
+    isTestingApi.value = true;
+
+    try {
+      const response = await fetch('/api/chat/test-api', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          apiBaseUrl: apiBaseUrl.value,
+          apiKey: apiKey.value,
+          model: currentModel.value.id // 传递当前选择的模型ID
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        apiTestResult.value = {
+          success: true,
+          message: result.message || 'API 连接测试成功！'
+        };
+        toast.success('API 连接测试成功', {
+          position: 'top-center',
+          duration: 2000,
+        });
+      } else {
+        apiTestResult.value = {
+          success: false,
+          message: result.error || result.message || 'API 连接测试失败'
+        };
+        toast.error('API 连接测试失败', {
+          position: 'top-center',
+          duration: 3000,
+        });
+      }
+    } catch (error: any) {
+      console.error('API测试失败:', error);
+      apiTestResult.value = {
+        success: false,
+        message: error.message || '网络错误，请检查您的网络连接'
+      };
+      toast.error('API 测试失败', {
+        position: 'top-center',
+        duration: 3000,
+      });
+    } finally {
+      isTestingApi.value = false;
     }
   };
 

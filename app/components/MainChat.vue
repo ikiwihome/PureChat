@@ -49,8 +49,8 @@
           </span>
         </div>
 
-        <!-- 加载指示器 -->
-        <div v-if="isLoading && message.role === 'assistant'" class="flex justify-start">
+        <!-- 加载指示器 - 只在最后一条 AI 消息且正在加载时显示 -->
+        <div v-if="isLoading && message.role === 'assistant' && currentSession && index === currentSession.messages.length - 1" class="flex justify-start">
           <div class="rounded-xl px-4 py-2 mx-2 md:mx-4 lg:mx-8 bg-gray-200/20 dark:bg-gray-800/20 text-gray-800 dark:text-gray-200">
             <div class="flex space-x-1">
               <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
@@ -61,12 +61,14 @@
         </div>
       </div>
 
-      <!-- AI消息内容框 - 仅在内容不为空时显示 -->
-      <div :key="forceUpdateKey" v-if="message.role === 'assistant' && message.content" :class="[
+      <!-- AI消息内容框 - 始终显示(即使内容为空，也显示占位符) -->
+      <div v-if="message.role === 'assistant'" :key="message.id" :class="[
         'w-full max-w-full rounded-sm px-4 py-3 mx-2 md:mx-4 lg:mx-8',
-        'bg-gray-200/20 dark:bg-gray-800/20 text-gray-800 dark:text-gray-200'
+        'bg-gray-200/20 dark:bg-gray-800/20 text-gray-800 dark:text-gray-200',
+        !message.content ? 'min-h-8' : ''
       ]">
-        <div class="break-all wrap-break-word overflow-wrap-anywhere markdown-content" v-html="renderMarkdown(message.content)">
+        <div v-if="message.content" class="break-all wrap-break-word overflow-wrap-anywhere markdown-content">
+          <MarkdownRender :content="message.content" />
         </div>
       </div>
 
@@ -172,10 +174,13 @@
   import { Avatar, AvatarFallback } from '~/components/ui/avatar';
   import { Toaster, toast } from 'vue-sonner';
   import { useSessions, type Message, type Session, type Provider, type Model } from '~/composables/useSessions';
-  import { marked } from 'marked';
+  import { useModels } from '~/composables/useModels';
+  import MarkdownRender from 'markstream-vue';
+  import 'markstream-vue/index.css';
 
   // 导入模型数据
-  import modelData from '~/data/models.json';
+  const { providers } = useModels();
+  const modelData = computed(() => ({ providers: providers.value }));
 
 
   // 定义props接收选中的厂家和模型
@@ -189,6 +194,7 @@
   const currentSessionId = computed(() => sessionsStore?.currentSessionId?.value || null);
   const currentSession = computed(() => sessionsStore?.currentSession?.value || null);
   const addMessageToCurrentSession = (message: Message) => sessionsStore?.addMessageToCurrentSession(message);
+  const updateLastMessageContent = (content: string, stats?: any) => sessionsStore?.updateLastMessageContent(content, stats);
   const selectSession = (sessionId: string) => sessionsStore?.selectSession(sessionId);
   const saveSessionsToLocalStorage = () => {
     if (sessionsStore) {
@@ -218,7 +224,6 @@
   const inputRef = ref<HTMLTextAreaElement | null>(null);
   const messagesContainer = ref<HTMLDivElement | null>(null);
   const isLoading = ref(false);
-  const forceUpdateKey = ref(0); // 用于强制组件重新渲染
   const isHoveringSubmitButton = ref(false); // 鼠标是否悬停在提交按钮上
   const abortController = ref<AbortController | null>(null); // 用于取消请求的控制器
   const scrollTimeout = ref<ReturnType<typeof setTimeout> | null>(null); // 滚动防抖定时器
@@ -231,7 +236,7 @@
   const getProviderIcon = (providerId?: string): string => {
     if (!providerId) return props.selectedProvider.icon;
 
-    const provider = modelData.providers.find(p => p.id === providerId);
+    const provider = modelData.value.providers.find(p => p.id === providerId);
     return provider?.icon || props.selectedProvider.icon;
   };
 
@@ -243,7 +248,7 @@
   const getProviderName = (providerId?: string): string => {
     if (!providerId) return props.selectedProvider.name;
 
-    const provider = modelData.providers.find(p => p.id === providerId);
+    const provider = modelData.value.providers.find(p => p.id === providerId);
     return provider?.name || props.selectedProvider.name;
   };
 
@@ -256,7 +261,7 @@
   const getModelName = (providerId?: string, modelId?: string): string => {
     if (!providerId || !modelId) return props.currentModel.name;
 
-    const provider = modelData.providers.find(p => p.id === providerId);
+    const provider = modelData.value.providers.find(p => p.id === providerId);
     const model = provider?.models.find(m => m.id === modelId);
     return model?.name || props.currentModel.name;
   };
@@ -285,35 +290,6 @@
     const seconds = String(date.getSeconds()).padStart(2, '0');
 
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-  };
-
-  /**
-   * @description 渲染Markdown内容为HTML
-   * @param {string} content - Markdown格式的文本内容
-   * @returns {string} 渲染后的HTML内容
-   */
-  const renderMarkdown = (content: string): string => {
-    if (!content) return '';
-
-    try {
-      // 配置marked选项，禁用不安全的HTML渲染
-      marked.setOptions({
-        breaks: true, // 将换行符转换为<br>
-        gfm: true,    // 启用GitHub风格的Markdown
-      });
-
-      // marked.parse可能返回Promise，需要同步处理
-      const result = marked.parse(content);
-
-      // 如果是Promise，返回占位符，实际项目中应该使用异步处理
-      if (result instanceof Promise) {
-        return content; // 暂时返回原始内容
-      }
-
-      return result as string;
-    } catch (error) {
-      return content; // 如果渲染失败，返回原始文本
-    }
   };
 
   /**
@@ -356,12 +332,8 @@
     if (currentSession.value?.messages?.length) {
       const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
       if (lastMessage && lastMessage.role === 'assistant' && lastMessage.content) {
-        // 更新会话时间戳
-        currentSession.value.updatedAt = formatDate(new Date());
         // 保存到本地存储
         saveSessionsToLocalStorage();
-        // 强制重新渲染
-        forceUpdateKey.value++;
       }
     }
 
@@ -381,7 +353,7 @@
    */
   const callAIApi = async (messages: Message[], onContentUpdate: (content: string) => void, onStatsUpdate: (stats: any) => void) => {
     // 从本地存储获取设置
-    let customApiConfig = {};
+    let customApiConfig: any = {};
     let temperatureValue = 0.3; // 默认温度值
     let systemPromptValue = ''; // 默认系统提示词
 
@@ -390,11 +362,19 @@
         const stored = localStorage.getItem('chat_settings');
         if (stored) {
           const settings = JSON.parse(stored);
-          if (settings.providerSettings) {
-            customApiConfig = settings.providerSettings;
+          // 只有在开启自定义API时才传递配置，否则使用环境变量
+          if (settings.useCustomApi === true) {
+            customApiConfig = {
+              useCustomApi: true,
+              apiBaseUrl: settings.apiBaseUrl,
+              apiKey: settings.apiKey
+            };
           }
           if (settings.temperature !== undefined) {
-            temperatureValue = settings.temperature;
+            // 确保 temperature 是数字类型，如果是数组则取第一个值
+            temperatureValue = Array.isArray(settings.temperature) 
+              ? Number(settings.temperature[0]) || 0.3 
+              : Number(settings.temperature) || 0.3;
           }
           if (settings.systemPrompt !== undefined) {
             systemPromptValue = settings.systemPrompt;
@@ -422,7 +402,6 @@
           content: msg.content
         })),
         temperature: temperatureValue,
-        max_tokens: 4096,
         customApiConfig: customApiConfig,
         systemPrompt: systemPromptValue,
         stream: true // 启用流式传输
@@ -525,43 +504,32 @@
       // 立即滚动到底部
       scrollToBottom(true);
 
-      // 构建要发送的消息（使用除最后一个消息外的所有消息，避免重复添加当前用户消息）
+      // 构建要发送的消息（排除刚创建的空 AI 消息占位符）
       const messagesToSend = (currentSession.value?.messages.slice(0, -1) || []);
 
       // 调用共享的API函数
       await callAIApi(
         messagesToSend,
         (content) => {
-          // 更新消息内容
-          if (currentSession.value && currentSession.value.messages.length > 0) {
-            const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
-            if (lastMessage && lastMessage.role === 'assistant') {
-              lastMessage.content = content;
-              // 更新会话时间戳
-              currentSession.value.updatedAt = formatDate(new Date());
-              // 实时保存到本地存储，确保即使停止生成也不会丢失已生成的内容
-              saveSessionsToLocalStorage();
-              // 强制重新渲染以显示更新
-              forceUpdateKey.value++;
-              // 在内容更新时滚动到底部
-              scrollToBottom();
-            }
-          }
+          // 使用新的更新方法来确保响应式更新
+          updateLastMessageContent(content);
+          // 在内容更新时滚动到底部（使用防抖）
+          scrollToBottom();
         },
         (stats) => {
-          // 更新统计信息
+          // 使用新的更新方法来更新统计信息
           if (currentSession.value && currentSession.value.messages.length > 0) {
             const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
             if (lastMessage && lastMessage.role === 'assistant') {
-              lastMessage.stats = stats;
-              // 保存到本地存储
-              saveSessionsToLocalStorage();
-              // 强制重新渲染
-              forceUpdateKey.value++;
+              // 合并现有内容和新的统计信息
+              updateLastMessageContent(lastMessage.content, stats);
             }
           }
         }
       );
+      
+      // 流式输出完成后，保存到本地存储
+      saveSessionsToLocalStorage();
     } catch (error: any) {
       // 检查是否是用户主动取消的请求
       if (error.name === 'AbortError' || error.message?.includes('aborted')) {
@@ -575,12 +543,8 @@
             if (lastMessage.content === '') {
               // 内容为空，移除消息
               currentSession.value.messages.pop();
-            } else {
-              // 有部分内容，保留并更新会话时间戳
-              currentSession.value.updatedAt = formatDate(new Date());
             }
             saveSessionsToLocalStorage();
-            forceUpdateKey.value++;
           }
         }
 
@@ -600,11 +564,10 @@
       if (currentSession.value && currentSession.value.messages.length > 0) {
         const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
         if (lastMessage && lastMessage.role === 'assistant' && lastMessage.content === '') {
-          lastMessage.content = `抱歉，AI服务暂时不可用。错误信息: ${errorMessage}`;
+          // 更新错误消息
+          updateLastMessageContent(`抱歉，AI服务暂时不可用。错误信息: ${errorMessage}`);
           // 保存到本地存储
           saveSessionsToLocalStorage();
-          // 强制重新渲染
-          forceUpdateKey.value++;
         }
       }
     } finally {
@@ -648,7 +611,7 @@
         });
       });
       scrollTimeout.value = null;
-    }, 100); // 100ms 防抖延迟
+    }, 50); // 50ms 防抖延迟，提高响应速度
   };
 
   /**
@@ -736,55 +699,39 @@
       await callAIApi(
         messagesToSend,
         (content) => {
-          // 更新消息内容
-          if (currentSession.value && currentSession.value.messages.length > 0) {
-            const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
-            if (lastMessage && lastMessage.role === 'assistant') {
-              lastMessage.content = content;
-              // 更新会话时间戳
-              currentSession.value.updatedAt = formatDate(new Date());
-              // 实时保存到本地存储，确保即使停止生成也不会丢失已生成的内容
-              saveSessionsToLocalStorage();
-              // 强制重新渲染以显示更新
-              forceUpdateKey.value++;
-              // 在内容更新时滚动到底部
-              scrollToBottom();
-            }
-          }
+          // 使用新的更新方法来确保响应式更新
+          updateLastMessageContent(content);
+          // 在内容更新时滚动到底部（使用防抖）
+          scrollToBottom();
         },
         (stats) => {
-          // 更新统计信息
+          // 使用新的更新方法来更新统计信息
           if (currentSession.value && currentSession.value.messages.length > 0) {
             const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
             if (lastMessage && lastMessage.role === 'assistant') {
-              lastMessage.stats = stats;
-              // 保存到本地存储
-              saveSessionsToLocalStorage();
-              // 强制重新渲染
-              forceUpdateKey.value++;
+              // 合并现有内容和新的统计信息
+              updateLastMessageContent(lastMessage.content, stats);
             }
           }
         }
       );
+      
+      // 流式输出完成后，保存到本地存储
+      saveSessionsToLocalStorage();
     } catch (error: any) {
       // 检查是否是用户主动取消的请求
       if (error.name === 'AbortError' || error.message?.includes('aborted')) {
         console.log('重新生成请求已被用户取消');
 
         // 如果AI消息已经创建但内容为空，移除这个空消息
-        // 如果有部分内容，则保留并保存到本地存储
         if (currentSession.value && currentSession.value.messages.length > 0) {
           const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
           if (lastMessage && lastMessage.role === 'assistant') {
             if (lastMessage.content === '') {
               // 内容为空，移除消息
               currentSession.value.messages.pop();
-            } else {
-              // 有部分内容，保留并更新会话时间戳
-              currentSession.value.updatedAt = formatDate(new Date());
             }
             saveSessionsToLocalStorage();
-            forceUpdateKey.value++;
           }
         }
 
@@ -804,11 +751,10 @@
       if (currentSession.value && currentSession.value.messages.length > 0) {
         const lastMessage = currentSession.value.messages[currentSession.value.messages.length - 1];
         if (lastMessage && lastMessage.role === 'assistant' && lastMessage.content === '') {
-          lastMessage.content = `抱歉，AI服务暂时不可用。错误信息: ${errorMessage}`;
+          // 更新错误消息
+          updateLastMessageContent(`抱歉，AI服务暂时不可用。错误信息: ${errorMessage}`);
           // 保存到本地存储
           saveSessionsToLocalStorage();
-          // 强制重新渲染
-          forceUpdateKey.value++;
         }
       }
     } finally {
@@ -817,24 +763,15 @@
     }
   };
 
-  // 监听当前会话变化，强制重新渲染
-  watch(currentSessionId, () => {
-    forceUpdateKey.value++;
-  });
-
   // 监听选中的厂家和模型变化，更新当前会话的厂家和模型
   watch(() => [props.selectedProvider, props.currentModel], (newValues) => {
     if (currentSession.value && newValues[0] && newValues[1]) {
       // 更新当前会话的厂家和模型
       currentSession.value.providerId = newValues[0].id;
       currentSession.value.modelId = newValues[1].id;
-      currentSession.value.updatedAt = formatDate(new Date());
 
       // 保存到本地存储
       saveSessionsToLocalStorage();
-
-      // 强制重新渲染
-      forceUpdateKey.value++;
     }
   }, { deep: true });
 

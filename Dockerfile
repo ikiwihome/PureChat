@@ -38,7 +38,7 @@ EXPOSE 8001
 # 设置 NODE_ENV 为 production，以确保生产环境优化
 ENV NODE_ENV=production
 ENV DEFAULT_API_KEY=sk-your_api_key_here
-ENV DEFAULT_BASE_URL=https://api.openai.com/v1
+ENV DEFAULT_BASE_URL=https://openrouter.ai/api/v1
 
 
 # 定义容器启动时执行的命令

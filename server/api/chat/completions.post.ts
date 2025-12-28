@@ -24,11 +24,10 @@ interface RequestData {
 }
 
 interface CustomApiConfig {
-  [key: string]: {
-    useCustomApi?: boolean
-    apiKey?: string
-    apiBaseUrl?: string
-  }
+  useCustomApi?: boolean
+  apiKey?: string
+  apiBaseUrl?: string
+  [key: string]: any // 兼容旧的按提供商分类的结构
 }
 
 
@@ -46,8 +45,8 @@ export default defineEventHandler(async (event) => {
     }
 
     // 获取API密钥和提供商配置
-    const provider = body.provider || 'deepseek' // 默认使用DeepSeek
-    const model = body.model || 'deepseek-chat' // 默认模型
+    const provider = body.provider || 'anthropic' // 默认提供商
+    const model = body.model || 'anthropic/claude-haiku-4.5' // 默认模型
 
     // 从前端获取自定义API设置（如果提供）
     const customApiConfig = body.customApiConfig || {}
@@ -126,20 +125,31 @@ export default defineEventHandler(async (event) => {
  * @param customApiConfig 自定义API配置
  */
 function getApiConfig(provider: string, customApiConfig: CustomApiConfig = {}): ApiConfig {
-  // 统一的OPENAI兼容API配置 - 直接从环境变量读取
+  // 从 Nuxt runtimeConfig 读取环境变量配置
+  const config = useRuntimeConfig()
+  
+  // 统一的OPENAI兼容API配置 - 从环境变量读取默认配置
   const defaultApiConfig = {
-    apiKey: process.env.DEFAULT_API_KEY || '',
-    baseUrl: process.env.DEFAULT_BASE_URL || 'https://api.openai.com/v1' // 统一的BaseURL，默认为OpenAI
+    apiKey: config.defaultApiKey || '',
+    baseUrl: config.defaultBaseUrl || 'https://openrouter.ai/api/v1'
   }
 
-  // 优先使用自定义API配置
-  const customProviderConfig = customApiConfig[provider]
-  if (customProviderConfig?.useCustomApi) {
+  // 优先使用自定义API配置（当useCustomApi为true时）
+  // 检查是否是新的扁平化结构
+  let customProviderConfig = customApiConfig.useCustomApi ? customApiConfig : null
+  
+  // 如果不是扁平化结构，尝试旧的按提供商分类的结构（向后兼容）
+  if (!customProviderConfig && customApiConfig[provider]?.useCustomApi) {
+    customProviderConfig = customApiConfig[provider]
+  }
+
+  // 当启用自定义API时，使用用户提供的配置
+  if (customProviderConfig?.useCustomApi === true) {
     if (!customProviderConfig.apiKey) {
       throw createError({
         statusCode: 400,
         statusMessage: 'Bad Request',
-        message: 'Custom API key not provided for provider: ${provider}'
+        message: `Custom API key not provided for provider: ${provider}`
       })
     }
 
@@ -149,12 +159,12 @@ function getApiConfig(provider: string, customApiConfig: CustomApiConfig = {}): 
     }
   }
 
-  // 使用默认的API配置
+  // 当未启用自定义API时，使用环境变量中的默认配置
   if (!defaultApiConfig.apiKey) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Bad Request',
-      message: 'Default API key not configured'
+      message: 'Default API key not configured in environment variables. Please set DEFAULT_API_KEY in your .env file.'
     })
   }
 
@@ -219,7 +229,18 @@ async function callOpenAICompatible(apiConfig: ApiConfig, requestData: RequestDa
 
   // 如果是流式请求，注册控制器以便可以被停止
   if (stream) {
-    registerStreamController(abortController)
+    // 从请求数据中提取会话ID（如果前端提供）
+    const sessionId = (requestData as any).sessionId
+    // 检测提供商（基于baseUrl）
+    const detectedProvider = baseUrl.includes('openrouter') ? 'openrouter' : 'other'
+    
+    registerStreamController(
+      abortController,
+      sessionId,
+      undefined, // requestId - OpenRouter会在响应头中返回，这里暂时为undefined
+      detectedProvider,
+      requestData.model
+    )
   }
 
   const response = await fetch(`${baseUrl}/chat/completions`, {

@@ -112,8 +112,8 @@ const createSessionsStore = () => {
       messages: [],
       createdAt: formatDate(now),
       updatedAt: formatDate(now),
-      providerId: 'OpenAI', // 默认厂家：OpenAI
-      modelId: 'gpt-4o-mini' // 默认模型：gpt-4o-mini
+      providerId: 'anthropic',
+      modelId: 'anthropic/claude-haiku-4.5'
     }
 
     // 使用响应式方式更新数组，确保触发重新渲染
@@ -207,6 +207,54 @@ const createSessionsStore = () => {
   }
 
   /**
+   * @description 更新当前会话中最后一条消息的内容（用于流式输出）
+   * @param {string} content - 新的消息内容
+   * @param {MessageStats} stats - 可选的统计信息
+   */
+  const updateLastMessageContent = (content: string, stats?: MessageStats): void => {
+    const sessionIndex = sessions.value.findIndex(s => s.id === currentSessionId.value)
+    if (sessionIndex !== -1) {
+      const session = sessions.value[sessionIndex]
+      if (!session || session.messages.length === 0) {
+        return
+      }
+
+      // 创建新的消息数组，更新最后一条消息
+      const updatedMessages = [...session.messages]
+      const lastMessageIndex = updatedMessages.length - 1
+      const lastMessage = updatedMessages[lastMessageIndex]
+      
+      if (!lastMessage) {
+        return
+      }
+      
+      updatedMessages[lastMessageIndex] = {
+        id: lastMessage.id,
+        role: lastMessage.role,
+        timestamp: lastMessage.timestamp,
+        providerId: lastMessage.providerId,
+        modelId: lastMessage.modelId,
+        content,
+        ...(stats && { stats })
+      }
+
+      // 创建新的会话对象以确保响应式更新
+      const updatedSession = {
+        ...session,
+        messages: updatedMessages,
+        updatedAt: formatDate(new Date())
+      }
+
+      // 使用响应式方式更新数组
+      sessions.value = [
+        ...sessions.value.slice(0, sessionIndex),
+        updatedSession,
+        ...sessions.value.slice(sessionIndex + 1)
+      ]
+    }
+  }
+
+  /**
    * @description 从本地存储加载会话
    */
   const loadSessionsFromLocalStorage = (): void => {
@@ -235,8 +283,8 @@ const createSessionsStore = () => {
               } : undefined
             })),
             // 为现有会话添加默认的 providerId 和 modelId（数据迁移）
-            providerId: session.providerId || 'meta',
-            modelId: session.modelId || 'deepseek-v3.1'
+            providerId: session.providerId || 'anthropic',
+            modelId: session.modelId || 'anthropic/claude-haiku-4.5'
           }))
 
           // 验证当前会话ID是否存在于会话列表中
@@ -298,6 +346,7 @@ const createSessionsStore = () => {
     selectSession,
     deleteSession,
     addMessageToCurrentSession,
+    updateLastMessageContent,
     createMessage,
     saveSessionsToLocalStorage
   }
@@ -320,6 +369,7 @@ export const useSessions = () => {
       selectSession: () => { },
       deleteSession: () => { },
       addMessageToCurrentSession: () => { },
+      updateLastMessageContent: () => { },
       createMessage: (content: string, role: 'user' | 'assistant') => ({
         id: '',
         content,

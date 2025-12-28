@@ -100,12 +100,10 @@
 
   import { useSidebar } from '~/components/ui/sidebar/utils'; // 引入 useSidebar
   import { useSessions, type Provider } from '~/composables/useSessions'; // 引入 useSessions 和类型
-
-  // 导入模型数据
-  import modelData from '~/data/models.json';
+  import { useModels } from '~/composables/useModels';
 
   // 厂家列表
-  const providers = ref<Provider[]>(modelData.providers);
+  const { providers } = useModels();
 
   /**
    * @description 根据厂家ID获取厂家图标

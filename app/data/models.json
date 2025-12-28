@@ -1,179 +1,57 @@
 {
-  "providers": [
-    {
-      "id": "anthropic",
-      "name": "Anthropic",
-      "icon": "/anthropic.svg",
-      "models": [
+    "data": [
         {
-          "id": "claude-sonnet-4-5-20250929",
-          "name": "Claude Sonnet 4.5",
-          "pricing": {
-            "input": 3.00,
-            "cachedInput": 0.30,
-            "output": 15.00
-          }
+            "id": "anthropic/claude-haiku-4.5",
+            "canonical_slug": "anthropic/claude-4.5-haiku-20251001",
+            "hugging_face_id": "",
+            "name": "Anthropic: Claude Haiku 4.5",
+            "created": 1760547638,
+            "description": "Claude Haiku 4.5 is Anthropic’s fastest and most efficient model, delivering near-frontier intelligence at a fraction of the cost and latency of larger Claude models. Matching Claude Sonnet 4’s performance across reasoning, coding, and computer-use tasks, Haiku 4.5 brings frontier-level capability to real-time and high-volume applications.\n\nIt introduces extended thinking to the Haiku line; enabling controllable reasoning depth, summarized or interleaved thought output, and tool-assisted workflows with full support for coding, bash, web search, and computer-use tools. Scoring >73% on SWE-bench Verified, Haiku 4.5 ranks among the world’s best coding models while maintaining exceptional responsiveness for sub-agents, parallelized execution, and scaled deployment.",
+            "context_length": 200000,
+            "architecture": {
+                "modality": "text+image->text",
+                "input_modalities": [
+                    "image",
+                    "text"
+                ],
+                "output_modalities": [
+                    "text"
+                ],
+                "tokenizer": "Claude",
+                "instruct_type": null
+            },
+            "pricing": {
+                "prompt": "0.000001",
+                "completion": "0.000005",
+                "request": "0",
+                "image": "0",
+                "web_search": "0",
+                "internal_reasoning": "0",
+                "input_cache_read": "0.0000001",
+                "input_cache_write": "0.00000125"
+            },
+            "top_provider": {
+                "context_length": 200000,
+                "max_completion_tokens": 64000,
+                "is_moderated": true
+            },
+            "per_request_limits": null,
+            "supported_parameters": [
+                "include_reasoning",
+                "max_tokens",
+                "reasoning",
+                "stop",
+                "temperature",
+                "tool_choice",
+                "tools",
+                "top_k",
+                "top_p"
+            ],
+            "default_parameters": {
+                "temperature": null,
+                "top_p": null,
+                "frequency_penalty": null
+            }
         }
-      ]
-    },
-    {
-      "id": "openai",
-      "name": "OpenAI",
-      "icon": "/openai.svg",
-      "models": [
-        {
-          "id": "gpt-5.1",
-          "name": "GPT-5.1",
-          "pricing": {
-            "input": 1.25,
-            "cachedInput": 0.125,
-            "output": 10.00
-          }
-        },
-        {
-          "id": "gpt-5.1-codex-mini",
-          "name": "GPT-5.1 Codex Mini",
-          "pricing": {
-            "input": 0.25,
-            "cachedInput": 0.025,
-            "output": 2.00
-          }
-        },
-        {
-          "id": "gpt-4o",
-          "name": "GPT-4o",
-          "pricing": {
-            "input": 2.50,
-            "cachedInput": 1.25,
-            "output": 10.00
-          }
-        },
-        {
-          "id": "gpt-4o-mini",
-          "name": "GPT-4o Mini",
-          "pricing": {
-            "input": 0.15,
-            "cachedInput": 0.075,
-            "output": 0.60
-          }
-        }
-      ]
-    },
-    {
-      "id": "google",
-      "name": "Google",
-      "icon": "/google.svg",
-      "models": [
-        {
-          "id": "gemini-3-pro-preview",
-          "name": "Gemini 3 Pro",
-          "pricing": {
-            "input": 1.25,
-            "cachedInput": 0.31,
-            "output": 10.00
-          }
-        },
-        {
-          "id": "gemini-2.5-pro",
-          "name": "Gemini 2.5 Pro",
-          "pricing": {
-            "input": 1.25,
-            "cachedInput": 0.31,
-            "output": 10.00
-          }
-        },
-        {
-          "id": "gemini-2.5-flash",
-          "name": "Gemini 2.5 Flash",
-          "pricing": {
-            "input": 0.30,
-            "cachedInput": 0.075,
-            "output": 2.50
-          }
-        }
-      ]
-    },
-    {
-      "id": "deepseek",
-      "name": "DeepSeek",
-      "icon": "/deepseek.svg",
-      "models": [
-        {
-          "id": "deepseek-chat",
-          "name": "DeepSeek-V3.2-Exp",
-          "pricing": {
-            "input": 0.27,
-            "cachedInput": 0.07,
-            "output": 1.10
-          }
-        }
-      ]
-    },
-    {
-      "id": "minimax",
-      "name": "MiniMax",
-      "icon": "/minimax.svg",
-      "models": [
-        {
-          "id": "MiniMax M2",
-          "name": "MiniMax-M2",
-          "pricing": {
-            "input": 0.30,
-            "cachedInput": 0.03,
-            "output": 1.18
-          }
-        }
-      ]
-    },
-    {
-      "id": "meta",
-      "name": "Meta",
-      "icon": "/meta.svg",
-      "models": [
-        {
-          "id": "llama-3.1-8b-instruct",
-          "name": "Llama-3.1-8B-Instruct",
-          "pricing": {
-            "input": 0.27,
-            "cachedInput": 0.07,
-            "output": 1.10
-          }
-        }
-      ]
-    },
-    {
-      "id": "xai",
-      "name": "xAI",
-      "icon": "/xai.svg",
-      "models": [
-        {
-          "id": "grok-4-0709",
-          "name": "Grok-4",
-          "pricing": {
-            "input": 3.00,
-            "cachedInput": 0.75,
-            "output": 15.00
-          }
-        },
-        {
-          "id": "grok-3",
-          "name": "Grok-3",
-          "pricing": {
-            "input": 3.00,
-            "cachedInput": 0.75,
-            "output": 15.00
-          }
-        },
-        {
-          "id": "grok-3-mini",
-          "name": "Grok-3 Mini",
-          "pricing": {
-            "input": 0.30,
-            "cachedInput": 0.075,
-            "output": 0.50
-          }
-        }
-      ]
-    }
-  ]
+    ]
 }
