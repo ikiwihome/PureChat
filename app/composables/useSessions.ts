@@ -231,7 +231,8 @@ const createSessionsStore = () => {
       updatedMessages[lastMessageIndex] = {
         id: lastMessage.id,
         role: lastMessage.role,
-        timestamp: lastMessage.timestamp,
+        // 当有stats时(表示AI回答完毕)，更新时间戳为完成时间；否则保持原时间戳
+        timestamp: stats ? new Date().toISOString() : lastMessage.timestamp,
         providerId: lastMessage.providerId,
         modelId: lastMessage.modelId,
         content,

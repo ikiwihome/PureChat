@@ -24,8 +24,7 @@
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare",
-    "tauri:build": "pnpm tauri build"
+    "postinstall": "nuxt prepare"
   },
   "dependencies": {
     "@tanstack/vue-table": "^8.21.3",

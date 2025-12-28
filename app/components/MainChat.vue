@@ -80,8 +80,27 @@
         <div class="break-all wrap-break-word overflow-wrap-anywhere">{{ message.content }}</div>
       </div>
 
-      <!-- 消息操作区域 - 放在消息框外部下方，仅在消息有内容时显示 -->
-      <div v-if="message.content" class="flex items-center justify-between mt-1 w-full max-w-full px-4 mx-2 md:mx-4 lg:mx-8">
+      <!-- 消息操作区域 - 放在消息框外部下方 -->
+      <!-- 用户消息：始终显示时间和复制按钮 -->
+      <div v-if="message.content && message.role === 'user'" class="flex items-center justify-between mt-1 w-full max-w-full px-4 mx-2 md:mx-4 lg:mx-8">
+        <div class="flex items-center space-x-2">
+          <!-- 消息时间 -->
+          <span class="text-xs text-gray-500 dark:text-gray-300">
+            {{ formatTime(message.timestamp) }}
+          </span>
+
+          <!-- 复制到剪贴板按钮 -->
+          <button @click="copyToClipboard(message.content)" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="复制到剪贴板">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600 dark:text-gray-300">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- AI消息：仅在回答完毕后（有stats时）显示时间、按钮和统计信息 -->
+      <div v-if="message.content && message.role === 'assistant' && message.stats" class="flex items-center justify-between mt-1 w-full max-w-full px-4 mx-2 md:mx-4 lg:mx-8">
         <!-- 左侧：消息时间和操作按钮 -->
         <div class="flex items-center space-x-2">
           <!-- 消息时间 -->
@@ -97,8 +116,8 @@
             </svg>
           </button>
 
-          <!-- 重新生成按钮（仅对AI消息显示） -->
-          <button v-if="message.role === 'assistant'" @click="regenerateMessage(index)" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="重新生成">
+          <!-- 重新生成按钮 -->
+          <button @click="regenerateMessage(index)" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="重新生成">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600 dark:text-gray-300">
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
               <path d="M3 3v5h5" />
@@ -106,11 +125,11 @@
           </button>
         </div>
 
-        <!-- 右侧：统计信息（仅对AI消息显示） -->
-        <div v-if="message.role === 'assistant' && message.stats" class="flex items-center space-x-2">
+        <!-- 右侧：统计信息 -->
+        <div class="flex items-center space-x-2">
           <div class="text-gray-500 dark:text-gray-300 flex items-center space-x-2">
             <!-- 第一个token时间 -->
-            <span class="text-xs" v-if="message.stats.firstTokenTime !== undefined" :title="`首字时延${message.stats.firstTokenTime || 0}ms`">
+            <span class="text-xs hidden lg:inline" v-if="message.stats.firstTokenTime !== undefined" :title="`首字时延${message.stats.firstTokenTime || 0}ms`">
               Time To First Token: {{ message.stats.firstTokenTime }}ms
             </span>
             <!-- token统计 -->
@@ -127,7 +146,7 @@
                 {{ message.stats.completionTokens || 0 }}↓
               </span> -->
             <!-- 每秒token数 -->
-            <span class="text-xs" v-if="message.stats.totalTime !== undefined && message.stats.completionTokens !== undefined" :title="`总耗时${message.stats.totalTime || 0}ms | 输出${message.stats.completionTokens || 0}tokens`">
+            <span class="text-xs hidden lg:inline" v-if="message.stats.totalTime !== undefined && message.stats.completionTokens !== undefined" :title="`总耗时${message.stats.totalTime || 0}ms | 输出${message.stats.completionTokens || 0}tokens`">
               Token Per Second: {{ message.stats.totalTime > 0 ? (message.stats.completionTokens / (message.stats.totalTime / 1000)).toFixed(2) : '∞' }} tokens/s
             </span>
           </div>

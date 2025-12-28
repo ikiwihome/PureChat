@@ -78,8 +78,8 @@ async function stopStream(sessionId: string): Promise<boolean> {
     if (stream.requestId) {
       try {
         const config = useRuntimeConfig()
-        const apiKey = config.defaultApiKey || ''
-        const baseUrl = config.defaultBaseUrl || 'https://openrouter.ai/api/v1'
+        const apiKey = config.defaultApiKey
+        const baseUrl = config.defaultBaseUrl
         
         if (apiKey) {
           console.log(`[Stop] Notifying provider to cancel request: ${stream.requestId}`)

@@ -130,8 +130,8 @@ function getApiConfig(provider: string, customApiConfig: CustomApiConfig = {}): 
   
   // 统一的OPENAI兼容API配置 - 从环境变量读取默认配置
   const defaultApiConfig = {
-    apiKey: config.defaultApiKey || '',
-    baseUrl: config.defaultBaseUrl || 'https://openrouter.ai/api/v1'
+    apiKey: config.defaultApiKey,
+    baseUrl: config.defaultBaseUrl
   }
 
   // 优先使用自定义API配置（当useCustomApi为true时）
