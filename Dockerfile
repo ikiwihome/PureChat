@@ -37,7 +37,10 @@ EXPOSE 3000
 
 # 设置环境变量
 ENV NODE_ENV=production
-# 运行时环境变量将通过 docker run -e NUXT_DEFAULT_API_KEY=xxx 传入
+
+# 运行时环境变量可通过以下两种方式传入:
+# 1. docker run -e NUXT_DEFAULT_BASE_URL=xxx -e NUXT_DEFAULT_API_KEY=xxx
+# 2. docker run -v /path/to/.env:/app/.env (挂载 .env 文件)
 
 # 定义容器启动时执行的命令
 # 运行 Nuxt.js 服务器的入口文件，监听 0.0.0.0 以允许外部访问

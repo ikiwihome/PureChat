@@ -54,14 +54,25 @@ export default defineEventHandler(async (event) => {
     // 根据提供商选择API配置
     const apiConfig = getApiConfig(provider, customApiConfig)
 
+    // 过滤掉空内容的消息（OpenAI 和 OpenRouter API 要求所有消息必须有非空内容）
+    let messages = body.messages.filter((msg: any) => msg.content && msg.content.trim() !== '')
+
+    // 验证过滤后是否还有消息
+    if (messages.length === 0) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: '请求错误',
+        message: '过滤空内容后没有有效的消息'
+      })
+    }
+
     // 处理系统提示词（如果提供）
-    let messages = [...body.messages]
-    if (body.systemPrompt) {
+    if (body.systemPrompt && body.systemPrompt.trim() !== '') {
       // 将系统提示词作为系统消息添加到消息数组的开头
       messages = [
         {
           role: 'system',
-          content: body.systemPrompt
+          content: body.systemPrompt.trim()
         },
         ...messages
       ]

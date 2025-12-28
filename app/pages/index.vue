@@ -238,11 +238,20 @@
 
   // 自动获取在线模型数据
   onMounted(async () => {
+    // 先加载设置
+    loadSettingsFromLocalStorage();
+    loadThemePreference();
+    
     // 保存当前选择的厂家和模型ID
     const currentProviderId = selectedProvider.value.id;
     const currentModelId = selectedModel.value;
 
-    await loadModels();
+    // 根据设置决定如何加载模型
+    if (useCustomApi.value && apiBaseUrl.value && apiKey.value) {
+      await loadModels(apiBaseUrl.value, apiKey.value);
+    } else {
+      await loadModels();
+    }
     
     // 尝试恢复之前选择的厂家和模型
     const provider = providers.value.find(p => p.id === currentProviderId);
@@ -265,6 +274,9 @@
         selectedModel.value = firstProvider.models[0]?.id || '';
       }
     }
+    
+    // 加载会话模型信息
+    loadSessionModelInfo();
   });
 
   // 会话管理
@@ -341,12 +353,7 @@
     }
   };
 
-  // 组件挂载时加载设置、主题偏好和会话模型信息
-  onMounted(() => {
-    loadSettingsFromLocalStorage();
-    loadThemePreference();
-    loadSessionModelInfo();
-  });
+  // 注意：设置加载已移到上面的 onMounted 中统一处理
 
   // 监听当前会话变化，同步模型信息
   watch(() => sessions?.currentSession?.value, (newSession) => {
@@ -407,7 +414,7 @@
   /**
    * @description 保存设置到本地存储
    */
-  const saveSettings = () => {
+  const saveSettings = async () => {
     if (typeof window !== 'undefined') {
       try {
         // 创建设置对象
@@ -421,6 +428,40 @@
 
         // 保存到本地存储
         localStorage.setItem('chat_settings', JSON.stringify(settings));
+
+        // 如果启用了自定义API，重新加载模型列表
+        if (useCustomApi.value && apiBaseUrl.value && apiKey.value) {
+          try {
+            await loadModels(apiBaseUrl.value, apiKey.value);
+            // 重新加载后，选择第一个可用的厂家和模型
+            if (providers.value.length > 0 && providers.value[0]) {
+              selectedProvider.value = providers.value[0];
+              if (providers.value[0].models.length > 0 && providers.value[0].models[0]) {
+                selectedModel.value = providers.value[0].models[0].id;
+              }
+            }
+          } catch (error) {
+            console.error('Failed to reload models:', error);
+            toast.error('加载模型列表失败', {
+              position: 'top-center',
+              duration: 2000,
+            });
+          }
+        } else if (!useCustomApi.value) {
+          // 如果关闭了自定义API，重新加载默认模型列表
+          try {
+            await loadModels();
+            // 重新加载后，选择第一个可用的厂家和模型
+            if (providers.value.length > 0 && providers.value[0]) {
+              selectedProvider.value = providers.value[0];
+              if (providers.value[0].models.length > 0 && providers.value[0].models[0]) {
+                selectedModel.value = providers.value[0].models[0].id;
+              }
+            }
+          } catch (error) {
+            console.error('Failed to reload default models:', error);
+          }
+        }
 
         // 显示保存成功的提示
         toast.success('设置已保存到本地存储', {

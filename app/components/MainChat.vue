@@ -392,6 +392,14 @@
     // 创建 AbortController 用于取消请求
     abortController.value = new AbortController();
 
+    // 过滤掉空内容的消息（OpenAI 和 OpenRouter API 要求所有消息必须有非空内容）
+    const filteredMessages = messages
+      .filter((msg: Message) => msg.content && msg.content.trim() !== '')
+      .map((msg: Message) => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
     // 调用后端API获取AI回复（启用流式传输）
     const response = await fetch('/api/chat/completions', {
       method: 'POST',
@@ -401,10 +409,7 @@
       body: JSON.stringify({
         provider: props.selectedProvider.id,
         model: props.currentModel.id,
-        messages: messages.map((msg: Message) => ({
-          role: msg.role,
-          content: msg.content
-        })),
+        messages: filteredMessages,
         temperature: temperatureValue,
         customApiConfig: customApiConfig,
         systemPrompt: systemPromptValue,
