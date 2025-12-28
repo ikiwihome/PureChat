@@ -2,7 +2,7 @@
 <div class="flex flex-col h-full lg:mx-auto lg:w-2/3">
   <!-- 消息列表区域 -->
   <div ref="messagesContainer" class="flex-1 min-h-0 p-4 space-y-6 mr-2 lg:mr-8">
-    <!-- 欢迎消息 - 显示当没有当前会话或当前会话没有消息时 -->
+    <!-- 欢迎消息 -->
     <div v-if="!currentSessionId || !currentSession?.messages.length" class="flex items-center justify-center h-full">
       <div class="text-center max-w-md mx-auto">
         <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-200/10 rounded-full flex items-center justify-center">
@@ -49,7 +49,7 @@
           </span>
         </div>
 
-        <!-- 加载指示器 - 只在最后一条 AI 消息且正在加载时显示 -->
+        <!-- 加载指示器 -->
         <div v-if="isLoading && message.role === 'assistant' && currentSession && index === currentSession.messages.length - 1" class="flex justify-start">
           <div class="rounded-xl px-4 py-2 mx-2 md:mx-4 lg:mx-8 bg-gray-200/20 dark:bg-gray-800/20 text-gray-800 dark:text-gray-200">
             <div class="flex space-x-1">
@@ -61,7 +61,7 @@
         </div>
       </div>
 
-      <!-- AI消息内容框 - 始终显示(即使内容为空，也显示占位符) -->
+      <!-- AI消息内容框 -->
       <div v-if="message.role === 'assistant'" :key="message.id" :class="[
         'w-full max-w-full rounded-sm px-4 py-3 mx-2 md:mx-4 lg:mx-8',
         'bg-gray-200/20 dark:bg-gray-800/20 text-gray-800 dark:text-gray-200',
@@ -80,8 +80,8 @@
         <div class="break-all wrap-break-word overflow-wrap-anywhere">{{ message.content }}</div>
       </div>
 
-      <!-- 消息操作区域 - 放在消息框外部下方 -->
-      <!-- 用户消息：始终显示时间和复制按钮 -->
+      <!-- 消息操作区域 -->
+      <!-- 用户消息 -->
       <div v-if="message.content && message.role === 'user'" class="flex items-center justify-between mt-1 w-full max-w-full px-4 mx-2 md:mx-4 lg:mx-8">
         <div class="flex items-center space-x-2">
           <!-- 消息时间 -->
@@ -99,7 +99,7 @@
         </div>
       </div>
 
-      <!-- AI消息：仅在回答完毕后（有stats时）显示时间、按钮和统计信息 -->
+      <!-- AI消息 -->
       <div v-if="message.content && message.role === 'assistant' && message.stats" class="flex items-center justify-between mt-1 w-full max-w-full px-4 mx-2 md:mx-4 lg:mx-8">
         <!-- 左侧：消息时间和操作按钮 -->
         <div class="flex items-center space-x-2">
@@ -132,19 +132,6 @@
             <span class="text-xs hidden lg:inline" v-if="message.stats.firstTokenTime !== undefined" :title="`首字时延${message.stats.firstTokenTime || 0}ms`">
               Time To First Token: {{ message.stats.firstTokenTime }}ms
             </span>
-            <!-- token统计 -->
-            <!-- <span class="text-xs" v-if="message.stats.promptTokens !== undefined"
-                :title="`输入${message.stats.promptTokens || 0}tokens`">
-                {{ message.stats.promptTokens || 0 }}↑
-              </span>
-              <span class="text-xs" v-if="message.stats.cachedTokens !== undefined"
-                :title="`缓存命中${message.stats.cachedTokens || 0}tokens`">
-                ↑{{ message.stats.cachedTokens || 0 }}
-              </span>
-              <span class="text-xs" v-if="message.stats.completionTokens !== undefined"
-                :title="`输出${message.stats.completionTokens || 0}tokens`">
-                {{ message.stats.completionTokens || 0 }}↓
-              </span> -->
             <!-- 每秒token数 -->
             <span class="text-xs hidden lg:inline" v-if="message.stats.totalTime !== undefined && message.stats.completionTokens !== undefined" :title="`总耗时${message.stats.totalTime || 0}ms | 输出${message.stats.completionTokens || 0}tokens`">
               Token Per Second: {{ message.stats.totalTime > 0 ? (message.stats.completionTokens / (message.stats.totalTime / 1000)).toFixed(2) : '∞' }} tokens/s
@@ -187,12 +174,11 @@
 
 <script setup
   lang="ts">
-  import { ref, watch, onMounted, computed, nextTick } from 'vue';
-  // 移除node:timers导入，使用ReturnType替代
+  import { ref, watch, onMounted, onUnmounted, computed, nextTick } from 'vue';
   import { Button } from '~/components/ui/button';
   import { Avatar, AvatarFallback } from '~/components/ui/avatar';
   import { Toaster, toast } from 'vue-sonner';
-  import { useSessions, type Message, type Session, type Provider, type Model } from '~/composables/useSessions';
+  import { useSessions, type Message, type Provider, type Model } from '~/composables/useSessions';
   import { useModels } from '~/composables/useModels';
   import MarkdownRender from 'markstream-vue';
   import 'markstream-vue/index.css';
@@ -209,12 +195,10 @@
   }>();
 
   const sessionsStore = useSessions();
-  const sessions = computed(() => sessionsStore?.sessions?.value || []);
   const currentSessionId = computed(() => sessionsStore?.currentSessionId?.value || null);
   const currentSession = computed(() => sessionsStore?.currentSession?.value || null);
   const addMessageToCurrentSession = (message: Message) => sessionsStore?.addMessageToCurrentSession(message);
   const updateLastMessageContent = (content: string, stats?: any) => sessionsStore?.updateLastMessageContent(content, stats);
-  const selectSession = (sessionId: string) => sessionsStore?.selectSession(sessionId);
   const saveSessionsToLocalStorage = () => {
     if (sessionsStore) {
       sessionsStore.saveSessionsToLocalStorage();
@@ -241,11 +225,12 @@
 
   const inputMessage = ref('');
   const inputRef = ref<HTMLTextAreaElement | null>(null);
-  const messagesContainer = ref<HTMLDivElement | null>(null);
   const isLoading = ref(false);
   const isHoveringSubmitButton = ref(false); // 鼠标是否悬停在提交按钮上
   const abortController = ref<AbortController | null>(null); // 用于取消请求的控制器
   const scrollTimeout = ref<ReturnType<typeof setTimeout> | null>(null); // 滚动防抖定时器
+  const isUserScrolling = ref(false); // 用户是否正在手动滚动
+  const lastScrollTop = ref(0); // 上一次的滚动位置
 
   /**
    * @description 根据厂家ID获取厂家图标
@@ -596,10 +581,44 @@
   };
 
   /**
+   * @description 检查用户是否在页面底部附近
+   * @returns {boolean} 是否在底部附近（距离底部小于100px）
+   */
+  const isNearBottom = (): boolean => {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight;
+    const clientHeight = window.innerHeight;
+    return scrollHeight - scrollTop - clientHeight < 10;
+  };
+
+  /**
+   * @description 处理用户滚动事件
+   */
+  const handleScroll = () => {
+    const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    
+    // 检测用户是否主动向上滚动
+    if (currentScrollTop < lastScrollTop.value && !isNearBottom()) {
+      // 用户向上滚动且不在底部,标记为手动滚动
+      isUserScrolling.value = true;
+    } else if (isNearBottom()) {
+      // 用户滚动到底部附近,重置手动滚动状态
+      isUserScrolling.value = false;
+    }
+    
+    lastScrollTop.value = currentScrollTop;
+  };
+
+  /**
    * @description 滚动到页面底部（带防抖机制）
    * @param {boolean} immediate - 是否立即滚动，不使用防抖
    */
   const scrollToBottom = (immediate: boolean = false) => {
+    // 如果用户正在手动滚动且不在底部,则不自动滚动
+    if (isUserScrolling.value && !immediate) {
+      return;
+    }
+
     // 如果是立即滚动，清除现有的防抖定时器
     if (immediate && scrollTimeout.value) {
       clearTimeout(scrollTimeout.value);
@@ -608,6 +627,8 @@
 
     // 立即滚动的情况
     if (immediate) {
+      // 立即滚动时重置用户滚动状态
+      isUserScrolling.value = false;
       nextTick(() => {
         window.scrollTo({
           top: document.documentElement.scrollHeight,
@@ -798,6 +819,18 @@
     // 组件挂载后自动聚焦到输入框
     if (inputRef.value) {
       inputRef.value.focus();
+    }
+
+    // 添加滚动事件监听
+    window.addEventListener('scroll', handleScroll, { passive: true });
+  });
+
+  // 组件卸载时清理事件监听器
+  onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll);
+    // 清理滚动定时器
+    if (scrollTimeout.value) {
+      clearTimeout(scrollTimeout.value);
     }
   });
 </script>
