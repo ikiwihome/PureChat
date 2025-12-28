@@ -39,8 +39,8 @@ export default defineEventHandler(async (event) => {
     if (!body || !body.messages || !Array.isArray(body.messages)) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Bad Request',
-        message: 'Invalid request body: messages array is required'
+        statusMessage: '请求错误',
+        message: '无效的请求体：需要提供 messages 数组'
       })
     }
 
@@ -103,7 +103,7 @@ export default defineEventHandler(async (event) => {
       // 对于用户主动中断的请求，返回特殊的响应而不是错误
       return {
         aborted: true,
-        message: 'Request was aborted by user'
+        message: '请求已被用户取消'
       }
     }
 
@@ -113,8 +113,8 @@ export default defineEventHandler(async (event) => {
     const err = error as Error & { statusCode?: number; statusMessage?: string; message?: string }
     throw createError({
       statusCode: err.statusCode || 500,
-      statusMessage: err.statusMessage || 'Internal Server Error',
-      message: err.message || 'Failed to process chat completion'
+      statusMessage: err.statusMessage || '内部服务器错误',
+      message: err.message || '处理聊天请求失败'
     })
   }
 })
@@ -125,14 +125,11 @@ export default defineEventHandler(async (event) => {
  * @param customApiConfig 自定义API配置
  */
 function getApiConfig(provider: string, customApiConfig: CustomApiConfig = {}): ApiConfig {
-  // 从 Nuxt runtimeConfig 读取环境变量配置
   const config = useRuntimeConfig()
   
-  // 统一的OPENAI兼容API配置 - 从环境变量读取默认配置
-  const defaultApiConfig = {
-    apiKey: config.defaultApiKey,
-    baseUrl: config.defaultBaseUrl
-  }
+  // 统一的OPENAI兼容API配置 - 从运行时配置读取默认配置
+  const defaultApiKey = config.defaultApiKey
+  const defaultBaseUrl = config.defaultBaseUrl
 
   // 优先使用自定义API配置（当useCustomApi为true时）
   // 检查是否是新的扁平化结构
@@ -148,27 +145,30 @@ function getApiConfig(provider: string, customApiConfig: CustomApiConfig = {}): 
     if (!customProviderConfig.apiKey) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Bad Request',
-        message: `Custom API key not provided for provider: ${provider}`
+        statusMessage: '请求错误',
+        message: `未提供自定义 API 密钥（提供商：${provider}）`
       })
     }
 
     return {
       apiKey: customProviderConfig.apiKey,
-      baseUrl: customProviderConfig.apiBaseUrl || defaultApiConfig.baseUrl
+      baseUrl: customProviderConfig.apiBaseUrl || defaultBaseUrl
     }
   }
 
-  // 当未启用自定义API时，使用环境变量中的默认配置
-  if (!defaultApiConfig.apiKey) {
+  // 当未启用自定义API时，使用运行时配置中的默认配置
+  if (!defaultApiKey) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Bad Request',
-      message: 'Default API key not configured in environment variables. Please set DEFAULT_API_KEY in your .env file.'
+      statusMessage: '请求错误',
+      message: '未配置默认 API 密钥。请在环境变量中设置 DEFAULT_API_KEY。'
     })
   }
 
-  return defaultApiConfig
+  return {
+    apiKey: defaultApiKey,
+    baseUrl: defaultBaseUrl
+  }
 }
 
 /**
@@ -258,8 +258,8 @@ async function callOpenAICompatible(apiConfig: ApiConfig, requestData: RequestDa
     const errorObj = errorData as { error?: { message?: string } }
     throw createError({
       statusCode: response.status,
-      statusMessage: 'API Error',
-      message: errorObj.error?.message || `API error: ${response.statusText}`
+      statusMessage: 'API 错误',
+      message: errorObj.error?.message || `API 错误：${response.statusText}`
     })
   }
 

@@ -15,8 +15,9 @@ export default defineNuxtConfig({
   // 运行时配置 - 用于服务器端API
   runtimeConfig: {
     // 服务器端可用的私有配置
-    defaultBaseUrl: process.env.DEFAULT_BASE_URL || 'https://openrouter.ai/api/v1',
-    defaultApiKey: process.env.DEFAULT_API_KEY || '',
+    // 使用 NUXT_ 前缀使这些环境变量可以在运行时被覆盖
+    defaultBaseUrl: process.env.NUXT_DEFAULT_BASE_URL || process.env.DEFAULT_BASE_URL || 'https://openrouter.ai/api/v1',
+    defaultApiKey: process.env.NUXT_DEFAULT_API_KEY || process.env.DEFAULT_API_KEY || '',
   },
 
   modules: ['shadcn-nuxt', '@nuxtjs/color-mode', 'vue-sonner/nuxt'],
@@ -25,8 +26,8 @@ export default defineNuxtConfig({
     classSuffix: ''
   },
   nitro: {
-    // 移除或注释掉 preset: 'static'，这样Nitro会默认构建一个Node.js服务器预设
-    preset: 'static',
+    // 使用默认的 node-server preset 以生成完整的服务器应用
+    // preset: 'node-server', // 默认值，可以省略
     compressPublicAssets: false,
     prerender: {
       routes: ['/'],
@@ -34,7 +35,9 @@ export default defineNuxtConfig({
       crawlLinks: false
     },
     routeRules: {
+      '/': { ssr: true },
       '/**': {
+        ssr: true,
         headers: {
           'X-Frame-Options': 'DENY',
           'X-Content-Type-Options': 'nosniff',

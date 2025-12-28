@@ -414,7 +414,20 @@
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      // 尝试读取后端返回的错误消息
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.statusMessage) {
+          errorMessage = errorData.statusMessage;
+        }
+      } catch (e) {
+        // 如果无法解析JSON，使用默认错误消息
+        console.warn('Failed to parse error response:', e);
+      }
+      throw new Error(errorMessage);
     }
 
     // 处理流式响应
