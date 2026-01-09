@@ -72,7 +72,7 @@
 
 <script setup
   lang="ts">
-  import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
+  import { ref, onMounted, onUnmounted, computed } from 'vue';
 
   import {
     Sidebar,
@@ -99,7 +99,7 @@
   } from '~/components/ui/alert-dialog'
 
   import { useSidebar } from '~/components/ui/sidebar/utils'; // 引入 useSidebar
-  import { useSessions, type Provider } from '~/composables/useSessions'; // 引入 useSessions 和类型
+  import { useSessions } from '~/composables/useSessions'; // 引入 useSessions
   import { useModels } from '~/composables/useModels';
 
   // 厂家列表

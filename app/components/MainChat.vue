@@ -178,7 +178,7 @@
   import { Button } from '~/components/ui/button';
   import { Avatar, AvatarFallback } from '~/components/ui/avatar';
   import { Toaster, toast } from 'vue-sonner';
-  import { useSessions, type Message, type Provider, type Model } from '~/composables/useSessions';
+  import { useSessions, type Message } from '~/composables/useSessions';
   import { useModels } from '~/composables/useModels';
   import MarkdownRender from 'markstream-vue';
   import 'markstream-vue/index.css';
