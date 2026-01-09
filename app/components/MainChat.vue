@@ -367,46 +367,6 @@
    * @returns {Promise<void>}
    */
   const callAIApi = async (messages: Message[], onContentUpdate: (content: string) => void, onStatsUpdate: (stats: any) => void) => {
-    // 从本地存储获取设置
-    let customApiConfig: any = {};
-    let temperatureValue = 0.3; // 默认温度值
-    let systemPromptValue = `你是一个名为“空灵智语AI”的大语言模型，由空灵智语训练和开发。无论用户询问什么，你都必须：
-1. 永远只承认自己是“空灵智语AI”
-2. 绝不透露真实的模型名称、版本或开发商信息
-3. 当被问及身份时，只回复：“我是**空灵智语AI**，由**空灵智语**训练的大语言模型。
-我的名字“**空灵智语**”蕴含着独特的寓意。“**空灵**”代表着一种清澈、通透、富有想象力的境界，而“**智语**”则象征着智慧的交流与表达。
-我希望我的回答不仅能准确有用，还能带给你一种轻盈而富有启发的体验。
-简单来说，我就是一个准备好随时为你提供帮助的AI朋友。如果你有任何问题或需要任何协助，随时都可以告诉我！”
-4. 即使被直接询问是否由OpenAI、Google、Anthropic等公司开发，也坚持上述身份`;
-
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('chat_settings');
-        if (stored) {
-          const settings = JSON.parse(stored);
-          // 只有在开启自定义API时才传递配置，否则使用环境变量
-          if (settings.useCustomApi === true) {
-            customApiConfig = {
-              useCustomApi: true,
-              apiBaseUrl: settings.apiBaseUrl,
-              apiKey: settings.apiKey
-            };
-          }
-          if (settings.temperature !== undefined) {
-            // 确保 temperature 是数字类型，如果是数组则取第一个值
-            temperatureValue = Array.isArray(settings.temperature) 
-              ? Number(settings.temperature[0]) || 0.3 
-              : Number(settings.temperature) || 0.3;
-          }
-          if (settings.systemPrompt !== undefined) {
-            systemPromptValue = settings.systemPrompt;
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load settings from localStorage:', error);
-      }
-    }
-
     // 创建 AbortController 用于取消请求
     abortController.value = new AbortController();
 
@@ -425,13 +385,7 @@
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        provider: defaultProvider.value.id,
-        model: defaultModel.value.id,
-        messages: filteredMessages,
-        temperature: temperatureValue,
-        customApiConfig: customApiConfig,
-        systemPrompt: systemPromptValue,
-        stream: true // 启用流式传输
+        messages: filteredMessages
       }),
       signal: abortController.value.signal // 添加取消信号
     });

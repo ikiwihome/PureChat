@@ -149,7 +149,6 @@ export function getActiveStreams() {
   return Array.from(activeStreams.entries()).map(([id, stream]) => ({
     sessionId: id,
     provider: stream.provider,
-    model: stream.model,
     duration: Date.now() - stream.startTime,
     hasRequestId: !!stream.requestId
   }))

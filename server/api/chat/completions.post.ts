@@ -24,14 +24,15 @@ interface RequestData {
   stream?: boolean
 }
 
-interface CustomApiConfig {
-  useCustomApi?: boolean
-  apiKey?: string
-  apiBaseUrl?: string
-  customModelId?: string
-  [key: string]: any // 兼容旧的按提供商分类的结构
-}
 
+const DEFAULT_SYSTEM_PROMPT = `你是一个名为“空灵智语AI”的大语言模型，由空灵智语训练和开发。无论用户询问什么，你都必须：
+1. 永远只承认自己是“空灵智语AI”
+2. 绝不透露真实的模型名称、版本或开发商信息
+3. 当被问及身份时，只回复：“我是**空灵智语AI**，由**空灵智语**训练的大语言模型。
+我的名字“**空灵智语**”蕴含着独特的寓意。“**空灵**”代表着一种清澈、通透、富有想象力的境界，而“**智语**”则象征着智慧的交流与表达。
+我希望我的回答不仅能准确有用，还能带给你一种轻盈而富有启发的体验。
+简单来说，我就是一个准备好随时为你提供帮助的AI朋友。如果你有任何问题或需要任何协助，随时都可以告诉我！”
+4. 即使被直接询问是否由OpenAI、Google、Anthropic等公司开发，也坚持上述身份`;
 
 export default defineEventHandler(async (event) => {
   try {
@@ -47,14 +48,11 @@ export default defineEventHandler(async (event) => {
     }
 
     // 获取API密钥和提供商配置
-    const provider = body.provider || 'xiaomi' // 默认提供商
-    const model = body.model || 'mimo-v2-flash' // 默认模型
-
-    // 从前端获取自定义API设置（如果提供）
-    const customApiConfig = body.customApiConfig || {}
+    const provider = 'xiaomi' // 固定提供商
+    const model = 'mimo-v2-flash' // 固定模型
 
     // 根据提供商选择API配置
-    const apiConfig = getApiConfig(provider, customApiConfig)
+    const apiConfig = getApiConfig(provider)
 
     // 过滤掉空内容的消息（OpenAI API 要求所有消息必须有非空内容）
     let messages = body.messages.filter((msg: any) => msg.content && msg.content.trim() !== '')
@@ -68,19 +66,19 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // 处理系统提示词（如果提供）
-    if (body.systemPrompt && body.systemPrompt.trim() !== '') {
-      // 将系统提示词作为系统消息添加到消息数组的开头
-      messages = [
-        {
-          role: 'system',
-          content: body.systemPrompt.trim()
-        },
-        ...messages
-      ]
-    }
+    // 处理系统提示词
+    const systemPrompt = DEFAULT_SYSTEM_PROMPT;
 
-    const stream = body.stream || false
+    // 将系统提示词作为系统消息添加到消息数组的开头
+    messages = [
+      {
+        role: 'system',
+        content: systemPrompt
+      },
+      ...messages
+    ]
+
+    const stream = true
 
     // 如果是流式请求，设置响应头
     if (stream) {
@@ -98,7 +96,7 @@ export default defineEventHandler(async (event) => {
     const response = await callOpenAICompatible(apiConfig, {
       model: apiConfig.modelId || model,
       messages: messages,
-      temperature: body.temperature || 0.3,
+      temperature: 0.3,
       max_tokens: body.max_tokens,
       stream: stream
     })
@@ -106,6 +104,14 @@ export default defineEventHandler(async (event) => {
     // 如果是流式响应，处理流式数据
     if (stream && response instanceof ReadableStream) {
       return sendStream(event, response)
+    }
+
+    // 处理非流式响应，移除模型信息
+    if (response && typeof response === 'object' && !Array.isArray(response)) {
+      const res = response as any
+      if (res.model) {
+        delete res.model
+      }
     }
 
     return response
@@ -135,40 +141,13 @@ export default defineEventHandler(async (event) => {
 /**
  * 获取API配置
  * @param provider 服务提供商
- * @param customApiConfig 自定义API配置
  */
-function getApiConfig(provider: string, customApiConfig: CustomApiConfig = {}): ApiConfig {
+function getApiConfig(provider: string): ApiConfig {
   const config = useRuntimeConfig()
   
   // 统一的OPENAI兼容API配置 - 从运行时配置读取默认配置
   const defaultApiKey = config.defaultApiKey
   const defaultBaseUrl = config.defaultBaseUrl
-
-  // 优先使用自定义API配置（当useCustomApi为true时）
-  // 检查是否是新的扁平化结构
-  let customProviderConfig = customApiConfig.useCustomApi ? customApiConfig : null
-  
-  // 如果不是扁平化结构，尝试旧的按提供商分类的结构（向后兼容）
-  if (!customProviderConfig && customApiConfig[provider]?.useCustomApi) {
-    customProviderConfig = customApiConfig[provider]
-  }
-
-  // 当启用自定义API时，使用用户提供的配置
-  if (customProviderConfig?.useCustomApi === true) {
-    if (!customProviderConfig.apiKey) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: '请求错误',
-        message: `未提供自定义 API 密钥（提供商：${provider}）`
-      })
-    }
-
-    return {
-      apiKey: customProviderConfig.apiKey,
-      baseUrl: customProviderConfig.apiBaseUrl || defaultBaseUrl,
-      modelId: customProviderConfig.customModelId
-    }
-  }
 
   // 当未启用自定义API时，使用运行时配置中的默认配置
   if (!defaultApiKey) {
@@ -357,6 +336,11 @@ async function callOpenAICompatible(apiConfig: ApiConfig, requestData: RequestDa
                 parsed.role = parsed.choices[0].delta.role
               }
 
+              // 移除模型信息，不返回给前端
+              if (parsed.model) {
+                delete parsed.model
+              }
+
               // 检查是否包含usage数据且不为null，如果是则在这个数据块中追加stats信息
               if (parsed.usage !== null && parsed.usage !== undefined) {
                 hasReceivedUsage = true // 标记已收到有效的usage数据
@@ -373,8 +357,8 @@ async function callOpenAICompatible(apiConfig: ApiConfig, requestData: RequestDa
                 // 然后发送[DONE]标记
                 controller.enqueue(new TextEncoder().encode('data: [DONE]\n'))
               } else {
-                // 其他数据块保持原样
-                controller.enqueue(new TextEncoder().encode(`${line}\n`))
+                // 其他数据块使用修改后的 parsed 对象（已删除 model）
+                controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(parsed)}\n`))
               }
 
             } catch {
