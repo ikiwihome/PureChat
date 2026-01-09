@@ -32,6 +32,9 @@ WORKDIR /app
 # 这个目录包含了 Nuxt.js 服务器端代码和所有静态资源
 COPY --from=builder /app/.output ./.output
 
+# 复制 .env 文件到运行目录，以便 Nuxt 运行时读取
+COPY .env ./
+
 # 暴露 Nuxt.js 服务器监听的端口
 EXPOSE 3000
 
