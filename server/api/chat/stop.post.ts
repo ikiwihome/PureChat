@@ -19,7 +19,7 @@ let activeStreams: Map<string, ActiveStream> = new Map()
  * 注册活跃的流式响应控制器
  * @param sessionId - 会话唯一标识符
  * @param controller - AbortController实例
- * @param requestId - OpenRouter请求ID（可选）
+ * @param requestId - 请求ID（可选）
  * @param provider - 服务提供商名称（可选）
  * @param model - 使用的模型名称（可选）
  */

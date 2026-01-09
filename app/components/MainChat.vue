@@ -6,7 +6,7 @@
     <div v-if="!currentSessionId || !currentSession?.messages.length" class="flex items-center justify-center h-full">
       <div class="text-center max-w-md mx-auto">
         <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-200/10 rounded-full flex items-center justify-center">
-          <img :src="props.selectedProvider.icon" :alt="props.selectedProvider.name" class="h-8 w-8 dark:filter dark:invert" />
+          <img :src="defaultProvider.icon" :alt="defaultProvider.name" class="h-8 w-8 dark:filter dark:invert" />
         </div>
         <h2 class="mb-5 max-w-[75vh] px-12 text-center text-lg font-medium dark:text-white md:px-0 md:text-2xl">
           {{ !currentSessionId ? '请选择一个会话或创建新会话' : '我今天能帮你做什么？' }}</h2>
@@ -31,7 +31,7 @@
           </Avatar>
           <!-- 名称 -->
           <span class="text-sm select-none font-semibold">
-            User
+            用户
           </span>
         </div>
 
@@ -162,9 +162,9 @@
         </Button>
       </div>
     </form>
-    <!-- <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
         按 Enter 发送，Shift + Enter 换行
-      </p> -->
+      </p>
   </div>
 
   <!-- Toaster 通知组件 -->
@@ -187,12 +187,23 @@
   const { providers } = useModels();
   const modelData = computed(() => ({ providers: providers.value }));
 
+  // 默认厂家和模型
+  const defaultProvider = computed(() => providers.value[0] || {
+    id: '',
+    name: '',
+    icon: '',
+    models: []
+  });
 
-  // 定义props接收选中的厂家和模型
-  const props = defineProps<{
-    selectedProvider: Provider;
-    currentModel: Model;
-  }>();
+  const defaultModel = computed(() => defaultProvider.value.models[0] || {
+    id: '',
+    name: '未选择模型',
+    pricing: {
+      input: 0,
+      cachedInput: 0,
+      output: 0
+    }
+  });
 
   const sessionsStore = useSessions();
   const currentSessionId = computed(() => sessionsStore?.currentSessionId?.value || null);
@@ -238,10 +249,10 @@
    * @returns {string} 厂家图标URL
    */
   const getProviderIcon = (providerId?: string): string => {
-    if (!providerId) return props.selectedProvider.icon;
+    if (!providerId) return defaultProvider.value.icon;
 
     const provider = modelData.value.providers.find(p => p.id === providerId);
-    return provider?.icon || props.selectedProvider.icon;
+    return provider?.icon || defaultProvider.value.icon;
   };
 
   /**
@@ -250,10 +261,10 @@
    * @returns {string} 厂家名称
    */
   const getProviderName = (providerId?: string): string => {
-    if (!providerId) return props.selectedProvider.name;
+    if (!providerId) return defaultProvider.value.name;
 
     const provider = modelData.value.providers.find(p => p.id === providerId);
-    return provider?.name || props.selectedProvider.name;
+    return provider?.name || defaultProvider.value.name;
   };
 
   /**
@@ -263,11 +274,11 @@
    * @returns {string} 模型名称
    */
   const getModelName = (providerId?: string, modelId?: string): string => {
-    if (!providerId || !modelId) return props.currentModel.name;
+    if (!providerId || !modelId) return defaultModel.value.name;
 
     const provider = modelData.value.providers.find(p => p.id === providerId);
     const model = provider?.models.find(m => m.id === modelId);
-    return model?.name || props.currentModel.name;
+    return model?.name || defaultModel.value.name;
   };
 
   /**
@@ -359,7 +370,7 @@
     // 从本地存储获取设置
     let customApiConfig: any = {};
     let temperatureValue = 0.3; // 默认温度值
-    let systemPromptValue = ''; // 默认系统提示词
+    let systemPromptValue = '你是一个名为 空灵智语AI 的大语言模型，由空灵智语训练。'; // 默认系统提示词
 
     if (typeof window !== 'undefined') {
       try {
@@ -392,7 +403,7 @@
     // 创建 AbortController 用于取消请求
     abortController.value = new AbortController();
 
-    // 过滤掉空内容的消息（OpenAI 和 OpenRouter API 要求所有消息必须有非空内容）
+    // 过滤掉空内容的消息（OpenAI API 要求所有消息必须有非空内容）
     const filteredMessages = messages
       .filter((msg: Message) => msg.content && msg.content.trim() !== '')
       .map((msg: Message) => ({
@@ -407,8 +418,8 @@
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        provider: props.selectedProvider.id,
-        model: props.currentModel.id,
+        provider: defaultProvider.value.id,
+        model: defaultModel.value.id,
         messages: filteredMessages,
         temperature: temperatureValue,
         customApiConfig: customApiConfig,
@@ -504,7 +515,7 @@
     if (!message || isLoading.value) return;
 
     // 添加用户消息（使用 createMessage 函数确保类型正确）
-    const userMessage = createMessage(message, 'user', props.selectedProvider.id, props.currentModel.id);
+    const userMessage = createMessage(message, 'user', defaultProvider.value.id, defaultModel.value.id);
     addMessageToCurrentSession(userMessage);
 
     inputMessage.value = '';
@@ -518,8 +529,8 @@
       const aiMessage = createMessage(
         '', // 初始为空内容
         'assistant',
-        props.selectedProvider.id,
-        props.currentModel.id
+        defaultProvider.value.id,
+        defaultModel.value.id
       );
       addMessageToCurrentSession(aiMessage);
 
@@ -742,8 +753,8 @@
       const newAiMessage = createMessage(
         '', // 初始为空内容
         'assistant',
-        props.selectedProvider.id,
-        props.currentModel.id
+        defaultProvider.value.id,
+        defaultModel.value.id
       );
       addMessageToCurrentSession(newAiMessage);
 
@@ -822,7 +833,7 @@
   };
 
   // 监听选中的厂家和模型变化，更新当前会话的厂家和模型
-  watch(() => [props.selectedProvider, props.currentModel], (newValues) => {
+  watch(() => [defaultProvider.value, defaultModel.value], (newValues) => {
     if (currentSession.value && newValues[0] && newValues[1]) {
       // 更新当前会话的厂家和模型
       currentSession.value.providerId = newValues[0].id;

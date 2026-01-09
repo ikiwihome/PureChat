@@ -138,7 +138,7 @@ cp .env.example .env
   ],
   "temperature": 0.3,   // 可选，默认0.3
   "stream": true,       // 可选，是否启用流式传输
-  "systemPrompt": "自定义系统提示词", // 可选
+  "systemPrompt": "你是一个名为 空灵智语AI 的大语言模型，由 空灵智语 训练。", // 可选
   "customApiConfig": {  // 可选，自定义API配置
     "openai": {
       "useCustomApi": true,

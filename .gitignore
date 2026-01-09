@@ -23,5 +23,3 @@ logs
 # Local data files
 
 data/sessions/
-.env
-.env.development

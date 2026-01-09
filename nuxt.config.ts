@@ -16,7 +16,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // 服务器端可用的私有配置
     // 使用 NUXT_ 前缀使这些环境变量可以在运行时被覆盖
-    defaultBaseUrl: process.env.NUXT_DEFAULT_BASE_URL || process.env.DEFAULT_BASE_URL || 'https://openrouter.ai/api/v1',
+    defaultBaseUrl: process.env.NUXT_DEFAULT_BASE_URL || process.env.DEFAULT_BASE_URL || 'https://api.xiaomimimo.com/v1',
+    defaultModel: process.env.NUXT_DEFAULT_MODEL || process.env.DEFAULT_MODEL || 'mimo-v2-flash',
     defaultApiKey: process.env.NUXT_DEFAULT_API_KEY || process.env.DEFAULT_API_KEY || '',
   },
 

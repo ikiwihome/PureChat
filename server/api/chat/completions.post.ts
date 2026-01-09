@@ -10,6 +10,7 @@ import { registerStreamController } from './stop.post'
 interface ApiConfig {
   apiKey: string
   baseUrl: string
+  modelId?: string
 }
 
 interface RequestData {
@@ -27,6 +28,7 @@ interface CustomApiConfig {
   useCustomApi?: boolean
   apiKey?: string
   apiBaseUrl?: string
+  customModelId?: string
   [key: string]: any // 兼容旧的按提供商分类的结构
 }
 
@@ -45,8 +47,8 @@ export default defineEventHandler(async (event) => {
     }
 
     // 获取API密钥和提供商配置
-    const provider = body.provider || 'anthropic' // 默认提供商
-    const model = body.model || 'anthropic/claude-haiku-4.5' // 默认模型
+    const provider = body.provider || 'xiaomi' // 默认提供商
+    const model = body.model || 'mimo-v2-flash' // 默认模型
 
     // 从前端获取自定义API设置（如果提供）
     const customApiConfig = body.customApiConfig || {}
@@ -54,7 +56,7 @@ export default defineEventHandler(async (event) => {
     // 根据提供商选择API配置
     const apiConfig = getApiConfig(provider, customApiConfig)
 
-    // 过滤掉空内容的消息（OpenAI 和 OpenRouter API 要求所有消息必须有非空内容）
+    // 过滤掉空内容的消息（OpenAI API 要求所有消息必须有非空内容）
     let messages = body.messages.filter((msg: any) => msg.content && msg.content.trim() !== '')
 
     // 验证过滤后是否还有消息
@@ -94,7 +96,7 @@ export default defineEventHandler(async (event) => {
 
     // 调用相应的AI服务
     const response = await callOpenAICompatible(apiConfig, {
-      model,
+      model: apiConfig.modelId || model,
       messages: messages,
       temperature: body.temperature || 0.3,
       max_tokens: body.max_tokens,
@@ -163,7 +165,8 @@ function getApiConfig(provider: string, customApiConfig: CustomApiConfig = {}): 
 
     return {
       apiKey: customProviderConfig.apiKey,
-      baseUrl: customProviderConfig.apiBaseUrl || defaultBaseUrl
+      baseUrl: customProviderConfig.apiBaseUrl || defaultBaseUrl,
+      modelId: customProviderConfig.customModelId
     }
   }
 
@@ -172,19 +175,20 @@ function getApiConfig(provider: string, customApiConfig: CustomApiConfig = {}): 
     throw createError({
       statusCode: 400,
       statusMessage: '请求错误',
-      message: '未配置默认 API 密钥。请在环境变量中设置 DEFAULT_API_KEY。'
+      message: '未配置默认 API 密钥。请在环境变量中设置 NUXT_DEFAULT_API_KEY。'
     })
   }
 
   return {
     apiKey: defaultApiKey,
-    baseUrl: defaultBaseUrl
+    baseUrl: defaultBaseUrl,
+    modelId: config.defaultModel
   }
 }
 
 /**
  * 调用OPENAI兼容的API
- * 适用于所有支持OpenAI格式的厂商（OpenAI、DeepSeek、xAI、Anthropic、Google等）
+ * 适用于所有支持OpenAI格式的厂商
  * 所有厂商都使用统一的BaseURL和APIKEY格式
  */
 async function callOpenAICompatible(apiConfig: ApiConfig, requestData: RequestData) {
@@ -243,12 +247,12 @@ async function callOpenAICompatible(apiConfig: ApiConfig, requestData: RequestDa
     // 从请求数据中提取会话ID（如果前端提供）
     const sessionId = (requestData as any).sessionId
     // 检测提供商（基于baseUrl）
-    const detectedProvider = baseUrl.includes('openrouter') ? 'openrouter' : 'other'
+    const detectedProvider = baseUrl.includes('xiaomi') ? 'xiaomi' : 'other'
     
     registerStreamController(
       abortController,
       sessionId,
-      undefined, // requestId - OpenRouter会在响应头中返回，这里暂时为undefined
+      undefined,
       detectedProvider,
       requestData.model
     )

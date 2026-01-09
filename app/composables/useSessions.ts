@@ -112,8 +112,8 @@ const createSessionsStore = () => {
       messages: [],
       createdAt: formatDate(now),
       updatedAt: formatDate(now),
-      providerId: 'anthropic',
-      modelId: 'anthropic/claude-haiku-4.5'
+      providerId: 'xiaomi',
+      modelId: 'mimo-v2-flash'
     }
 
     // 使用响应式方式更新数组，确保触发重新渲染
@@ -284,8 +284,8 @@ const createSessionsStore = () => {
               } : undefined
             })),
             // 为现有会话添加默认的 providerId 和 modelId（数据迁移）
-            providerId: session.providerId || 'anthropic',
-            modelId: session.modelId || 'anthropic/claude-haiku-4.5'
+            providerId: session.providerId || 'xiaomi',
+            modelId: session.modelId || 'mimo-v2-flash'
           }))
 
           // 验证当前会话ID是否存在于会话列表中
