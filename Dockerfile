@@ -32,8 +32,9 @@ WORKDIR /app
 # 这个目录包含了 Nuxt.js 服务器端代码和所有静态资源
 COPY --from=builder /app/.output ./.output
 
-# 复制 .env 文件到运行目录，以便 Nuxt 运行时读取
-COPY .env ./
+# 复制 entrypoint.sh 并赋予执行权限
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
 # 暴露 Nuxt.js 服务器监听的端口
 EXPOSE 3000
@@ -41,10 +42,5 @@ EXPOSE 3000
 # 设置环境变量
 ENV NODE_ENV=production
 
-# 运行时环境变量可通过以下两种方式传入:
-# 1. docker run -e NUXT_DEFAULT_BASE_URL=xxx -e NUXT_DEFAULT_API_KEY=xxx
-# 2. docker run -v /path/to/.env:/app/.env (挂载 .env 文件)
-
-# 定义容器启动时执行的命令
-# 运行 Nuxt.js 服务器的入口文件，监听 0.0.0.0 以允许外部访问
-CMD ["node", ".output/server/index.mjs"]
+# 定义容器启动时执行的入口脚本
+ENTRYPOINT ["./entrypoint.sh"]
