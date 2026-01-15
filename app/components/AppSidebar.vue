@@ -138,17 +138,21 @@
    */
   const groupedSessions = computed(() => {
     const groups: Record<string, any[]> = {};
-    // 显式初始化groups对象
-    Object.keys(groups).forEach(key => {
-      groups[key] = [];
-    });
+
+    // 使用 UTC 时间避免时区问题
     const now = new Date();
-    // 创建不带时间的日期对象，以便于按天比较
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const thirtyDaysAgo = new Date(today);
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const nowUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()));
+    const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const yesterdayUTC = new Date(todayUTC);
+    yesterdayUTC.setUTCDate(yesterdayUTC.getUTCDate() - 1);
+    const twoDaysAgoUTC = new Date(todayUTC);
+    twoDaysAgoUTC.setUTCDate(twoDaysAgoUTC.getUTCDate() - 2);
+    const weekAgoUTC = new Date(todayUTC);
+    weekAgoUTC.setUTCDate(weekAgoUTC.getUTCDate() - 7);
+    const twoWeeksAgoUTC = new Date(todayUTC);
+    twoWeeksAgoUTC.setUTCDate(twoWeeksAgoUTC.getUTCDate() - 14);
+    const monthAgoUTC = new Date(todayUTC);
+    monthAgoUTC.setUTCDate(monthAgoUTC.getUTCDate() - 30);
 
     // 1. 先对所有会话按创建时间倒序排序
     const sortedSessions = [...sessions.value].sort((a, b) =>
@@ -161,22 +165,79 @@
       if (!session.createdAt) continue;
 
       const sessionDate = new Date(session.createdAt);
-      const sessionDay = new Date(sessionDate.getFullYear(), sessionDate.getMonth(), sessionDate.getDate());
+      const sessionTimestamp = sessionDate.getTime();
+
+      // 使用 UTC 日期进行比较，避免时区偏移问题
+      const sessionDayUTC = new Date(Date.UTC(
+        sessionDate.getUTCFullYear(),
+        sessionDate.getUTCMonth(),
+        sessionDate.getUTCDate()
+      ));
 
       let groupKey = '';
 
-      if (sessionDay.getTime() === today.getTime()) {
+      // 实时范围 (1小时内)
+      const oneHourAgoTimestamp = nowUTC.getTime() - 60 * 60 * 1000;
+      if (sessionTimestamp >= oneHourAgoTimestamp) {
+        const minutesAgo = Math.floor((nowUTC.getTime() - sessionTimestamp) / (60 * 1000));
+        if (minutesAgo < 1) {
+          groupKey = '刚刚';
+        } else if (minutesAgo < 10) {
+          groupKey = '几分钟前';
+        } else if (minutesAgo < 30) {
+          groupKey = '半小时内';
+        } else {
+          groupKey = '1小时内';
+        }
+      }
+      // 今日范围 (24小时内)
+      else if (sessionDayUTC.getTime() === todayUTC.getTime()) {
         groupKey = '今天';
-      } else if (sessionDay.getTime() === yesterday.getTime()) {
+      }
+      // 近期范围 (1周内)
+      else if (sessionDayUTC.getTime() === yesterdayUTC.getTime()) {
         groupKey = '昨天';
-      } else if (sessionDay >= thirtyDaysAgo) {
-        groupKey = '过去30天';
-      } else if (sessionDate.getFullYear() === now.getFullYear()) {
-        // 本年度，超过30天的，按月份分组
-        groupKey = `${sessionDate.getMonth() + 1}月`;
-      } else {
-        // 往年，按年份分组
-        groupKey = `${sessionDate.getFullYear()}年`;
+      } else if (sessionDayUTC.getTime() === twoDaysAgoUTC.getTime()) {
+        groupKey = '前天';
+      } else if (sessionDayUTC > weekAgoUTC) {
+        groupKey = '本周早些时候';
+      }
+      // 中期范围 (2周内)
+      else if (sessionDayUTC > twoWeeksAgoUTC) {
+        const dayDiff = Math.floor((todayUTC.getTime() - sessionDayUTC.getTime()) / (24 * 60 * 60 * 1000));
+        if (dayDiff >= 7 && dayDiff < 14) {
+          groupKey = '上周';
+        } else {
+          groupKey = '两周前';
+        }
+      }
+      // 中期范围 (1月内)
+      else if (sessionDayUTC > monthAgoUTC) {
+        // 判断是否是本月
+        if (sessionDate.getUTCFullYear() === nowUTC.getUTCFullYear() &&
+            sessionDate.getUTCMonth() === nowUTC.getUTCMonth()) {
+          groupKey = '本月';
+        } else {
+          groupKey = '30天内';
+        }
+      }
+      // 长期范围
+      else {
+        // 计算月份差
+        const monthDiff = (nowUTC.getUTCFullYear() - sessionDate.getUTCFullYear()) * 12 +
+                          (nowUTC.getUTCMonth() - sessionDate.getUTCMonth());
+
+        if (monthDiff === 1) {
+          groupKey = '上个月';
+        } else if (monthDiff <= 3) {
+          groupKey = '几个月前';
+        } else if (monthDiff <= 6) {
+          groupKey = '半年前';
+        } else if (sessionDate.getUTCFullYear() === nowUTC.getUTCFullYear() - 1) {
+          groupKey = '去年';
+        } else {
+          groupKey = '更早';
+        }
       }
 
       groups[groupKey] = groups[groupKey] || [];
@@ -184,7 +245,13 @@
     }
 
     // 3. 定义分组的显示顺序并对分组键进行排序
-    const groupOrder = ["今天", "昨天", "过去30天"];
+    const groupOrder = [
+      "刚刚", "几分钟前", "半小时内", "1小时内",
+      "今天", "昨天", "前天", "本周早些时候",
+      "上周", "两周前",
+      "本月", "30天内",
+      "上个月", "几个月前", "半年前", "去年", "更早"
+    ];
     const sortedGroupKeys = Object.keys(groups).sort((a, b) => {
       const indexA = groupOrder.indexOf(a);
       const indexB = groupOrder.indexOf(b);
@@ -194,19 +261,6 @@
       // 如果只有一个在，让它排在前面
       if (indexA !== -1) return -1;
       if (indexB !== -1) return 1;
-
-      // 按月份排序 (例如 "8月", "7月")
-      if (a.endsWith('月') && b.endsWith('月')) {
-        return parseInt(b) - parseInt(a); // 月份数字大的排前面
-      }
-      // 按年份排序 (例如 "2024年", "2023年")
-      if (a.endsWith('年') && b.endsWith('年')) {
-        return parseInt(b) - parseInt(a); // 年份大的排前面
-      }
-
-      // 处理月份和年份混合的情况，年份总是在月份之后
-      if (a.endsWith('年') && b.endsWith('月')) return 1;
-      if (a.endsWith('月') && b.endsWith('年')) return -1;
 
       return 0;
     });
