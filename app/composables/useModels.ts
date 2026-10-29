@@ -9,7 +9,7 @@ const providers = ref<Provider[]>([
     icon: '/openai.svg', // 可以根据需要更换图标
     models: [
       {
-        id: 'mimo-v2-flash',
+        id: 'mimo-v2.6-flash',
         name: '空灵智语AI',
         pricing: {
           input: 0,

@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
 
     // 获取API密钥和提供商配置
     const provider = 'xiaomi' // 固定提供商
-    const model = 'mimo-v2-flash' // 固定模型
+    const model = 'mimo-v2.6-flash' // 固定模型
 
     // 根据提供商选择API配置
     const apiConfig = getApiConfig(provider)
